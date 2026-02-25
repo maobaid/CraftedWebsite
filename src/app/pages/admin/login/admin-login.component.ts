@@ -19,15 +19,22 @@ export class AdminLoginComponent {
     password: ['', Validators.required],
   });
   error = '';
+  loading = false;
 
-  submit(): void {
+  async submit(): Promise<void> {
     this.error = '';
     if (this.form.invalid) return;
     const { username, password } = this.form.getRawValue();
-    if (this.auth.login(username ?? '', password ?? '')) {
-      this.router.navigate(['/admin']);
-    } else {
-      this.error = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+    this.loading = true;
+    try {
+      const ok = await this.auth.login(username ?? '', password ?? '');
+      if (ok) {
+        this.router.navigate(['/admin']);
+      } else {
+        this.error = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+      }
+    } finally {
+      this.loading = false;
     }
   }
 }

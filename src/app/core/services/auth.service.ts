@@ -1,34 +1,82 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'admin123';
 const AUTH_KEY = 'crafted_admin_auth';
+const AUTH_TOKEN_KEY = 'crafted_admin_token';
+const AUTH_USER_KEY = 'crafted_admin_user';
+const LOGIN_URL = '/auth/login';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  store_id: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  user: AuthUser;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private isAuthenticatedSignal = signal<boolean>(this.checkStoredAuth());
+  private userSignal = signal<AuthUser | null>(this.getStoredUser());
 
   isAuthenticated = computed(() => this.isAuthenticatedSignal());
+  user = computed(() => this.userSignal());
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private http: HttpClient
+  ) {}
 
   private checkStoredAuth(): boolean {
-    return sessionStorage.getItem(AUTH_KEY) === 'true';
+    return !!sessionStorage.getItem(AUTH_TOKEN_KEY);
   }
 
-  login(username: string, password: string): boolean {
-    if (username === ADMIN_USER && password === ADMIN_PASS) {
-      sessionStorage.setItem(AUTH_KEY, 'true');
-      this.isAuthenticatedSignal.set(true);
-      return true;
+  private getStoredUser(): AuthUser | null {
+    const raw = sessionStorage.getItem(AUTH_USER_KEY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as AuthUser;
+    } catch {
+      return null;
     }
-    return false;
+  }
+
+  async login(emailOrUsername: string, password: string): Promise<boolean> {
+    try {
+      const res = await firstValueFrom(
+        this.http.post<LoginResponse>(LOGIN_URL, {
+          email: emailOrUsername,
+          password,
+        }, { observe: 'response' })
+      );
+
+      if (res.status !== 201 || !res.body) return false;
+
+      const { access_token, user } = res.body;
+      sessionStorage.setItem(AUTH_KEY, 'true');
+      sessionStorage.setItem(AUTH_TOKEN_KEY, access_token);
+      sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+      this.isAuthenticatedSignal.set(true);
+      this.userSignal.set(user);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   logout(): void {
     sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    sessionStorage.removeItem(AUTH_USER_KEY);
     this.isAuthenticatedSignal.set(false);
+    this.userSignal.set(null);
     this.router.navigate(['/admin/login']);
   }
 
@@ -36,9 +84,12 @@ export class AuthService {
     return this.isAuthenticatedSignal();
   }
 
-  /** Used by the guard so auth is read from storage (avoids timing issues after login). */
-  isLoggedIn(): boolean {
-    return sessionStorage.getItem(AUTH_KEY) === 'true';
+  getAccessToken(): string | null {
+    return sessionStorage.getItem(AUTH_TOKEN_KEY);
   }
 
+  /** Used by the guard so auth is read from storage (avoids timing issues after login). */
+  isLoggedIn(): boolean {
+    return !!sessionStorage.getItem(AUTH_TOKEN_KEY);
+  }
 }

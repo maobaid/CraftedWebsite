@@ -27,9 +27,9 @@
       <button
         type="submit"
         class="w-full rounded-xl bg-primary px-4 py-3 font-medium text-white disabled:opacity-60"
-        [disabled]="form.invalid"
+        [disabled]="form.invalid || loading"
       >
-        دخول
+        {{ loading ? 'جاري الدخول...' : 'دخول' }}
       </button>
     </form>
   </div>
