@@ -44,8 +44,11 @@ export class ProductService {
       this.productsSignal.set([]);
       return;
     }
-    this.http.get<ProductApi[]>(`/stores/${storeId}/products`, this.getAuthHeaders()).subscribe({
-        next: (list) => this.productsSignal.set((list ?? []).map(productFromApi)),
+    this.http.get<ProductApi[] | ProductApi>(`/stores/${storeId}/products`, this.getAuthHeaders()).subscribe({
+        next: (list) => {
+          const arr = Array.isArray(list) ? list : list ? [list] : [];
+          this.productsSignal.set(arr.map(productFromApi));
+        },
         error: () => {
           this.productsSignal.set([]);
         },

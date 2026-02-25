@@ -57,13 +57,17 @@ export class AdminProductsComponent {
   }
 
   save(): void {
-    if (!this.form.nameAr.trim() || this.form.price <= 0) return;
+    const name = (this.form.nameAr || '').trim();
+    if (!name || this.form.price <= 0) return;
+    const description = (this.form.descriptionAr || '').trim();
+    const image = (this.form.imageUrl || '').trim();
+    const category = (this.form.category_id || '').trim();
     const payload = {
-      nameAr: this.form.nameAr.trim(),
-      descriptionAr: this.form.descriptionAr.trim() || undefined,
+      nameAr: name,
+      descriptionAr: description || undefined,
       price: this.form.price,
-      imageUrl: this.form.imageUrl.trim(),
-      category_id: this.form.category_id.trim() || undefined,
+      imageUrl: image,
+      category_id: category || undefined,
       discountType: this.form.discountType ?? undefined,
       discountValue: this.form.discountValue || undefined,
       isActive: this.form.isActive,
