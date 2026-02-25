@@ -1,0 +1,220 @@
+<div class="mx-auto max-w-xl px-5 py-6">
+  <h1 class="mb-6 text-2xl font-semibold text-primary">إتمام الطلب</h1>
+
+  <div class="mb-8 flex items-center justify-center gap-0">
+    @for (s of [1,2,3,4]; track s) {
+      <span
+        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors"
+        [ngClass]="{
+          'bg-soft': step() < s,
+          'text-primary/60': step() < s,
+          'bg-accent text-white': step() >= s,
+          'bg-primary text-white': step() > s
+        }"
+      >{{ s }}</span>
+      @if (s < 4) {
+        <span
+          class="h-0.5 w-8 shrink-0 transition-colors"
+          [class.bg-soft]="step() <= s"
+          [class.bg-primary]="step() > s"
+        ></span>
+      }
+    }
+  </div>
+
+  @if (cartItems().length === 0 && step() < 4) {
+    <p class="text-center text-primary/70">
+      السلة فارغة. <a routerLink="/" class="text-accent hover:underline">العودة للتسوق</a>
+    </p>
+  } @else {
+    <div class="rounded-2xl bg-white p-6 shadow-lg">
+      @if (step() === 1) {
+        <div>
+          <h2 class="mb-4 text-lg font-semibold text-primary">التحقق من رقم الهاتف</h2>
+          <form [formGroup]="phoneForm" class="space-y-4">
+            <div>
+              <label for="phone" class="mb-1 block font-medium">رقم الهاتف</label>
+              <input
+                id="phone"
+                type="tel"
+                formControlName="phone"
+                placeholder="05xxxxxxxx"
+                class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            @if (!otpSent()) {
+              <button
+                type="button"
+                class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-medium text-white disabled:opacity-60"
+                (click)="sendOtp()"
+                [disabled]="phoneForm.get('phone')?.invalid || otpLoading()"
+              >
+                <app-hero-icon name="phone" size="20" />
+                {{ otpLoading() ? 'جاري الإرسال...' : 'إرسال رمز التحقق' }}
+              </button>
+            } @else {
+              <div>
+                <label for="otp" class="mb-1 block font-medium">رمز التحقق (٦ أرقام)</label>
+                <input
+                  id="otp"
+                  type="text"
+                  formControlName="otp"
+                  placeholder="000000"
+                  maxlength="6"
+                  class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent"
+                />
+              </div>
+              @if (otpError()) {
+                <p class="text-red-600">{{ otpError() }}</p>
+              }
+              <button
+                type="button"
+                class="flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3 font-medium text-white disabled:opacity-60"
+                (click)="verifyOtp()"
+                [disabled]="phoneForm.get('otp')?.invalid || verifyLoading() || phoneVerified()"
+              >
+                <app-hero-icon name="check" size="20" />
+                {{ verifyLoading() ? 'جاري التحقق...' : 'تحقق' }}
+              </button>
+              @if (phoneVerified() && !otpError()) {
+                <p class="mt-3 flex items-center justify-center gap-2 text-sm text-green-600">
+                  <app-hero-icon name="check" size="18" />
+                  تم التحقق من رقم الهاتف بنجاح
+                </p>
+              }
+            }
+          </form>
+          @if (!canProceedFromStep1()) {
+            <p class="mt-4 text-sm text-primary/60">يجب التحقق من رقم الهاتف للمتابعة.</p>
+          }
+        </div>
+      }
+
+      @if (step() === 2) {
+        <div>
+          <h2 class="mb-4 text-lg font-semibold text-primary">معلومات العميل</h2>
+          <form [formGroup]="customerForm" class="space-y-4">
+            <div>
+              <label for="fullName" class="mb-1 block font-medium">الاسم الكامل *</label>
+              <input id="fullName" formControlName="fullName" placeholder="الاسم الكامل" class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div>
+              <label for="email" class="mb-1 block font-medium">البريد الإلكتروني (اختياري)</label>
+              <input id="email" type="email" formControlName="email" placeholder="example@email.com" class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div>
+              <label for="address" class="mb-1 block font-medium">العنوان (إجباري للطلب الأول)</label>
+              <textarea id="address" formControlName="address" placeholder="العنوان الكامل للتوصيل" rows="3" class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent"></textarea>
+            </div>
+          </form>
+        </div>
+      }
+
+      @if (step() === 3) {
+        <div>
+          <h2 class="mb-4 text-lg font-semibold text-primary">خيار التوصيل</h2>
+          <form [formGroup]="deliveryForm" class="space-y-4">
+            <label class="flex cursor-pointer items-center gap-2">
+              <input type="checkbox" formControlName="scheduleDelivery" class="rounded" />
+              جدولة موعد التوصيل (اختياري)
+            </label>
+            @if (deliveryForm.get('scheduleDelivery')?.value) {
+              <div>
+                <label for="date" class="mb-1 block font-medium">التاريخ</label>
+                <input id="date" type="date" formControlName="date" class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent" />
+              </div>
+              <div>
+                <label for="time" class="mb-1 block font-medium">الوقت</label>
+                <input id="time" type="time" formControlName="time" class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent" />
+              </div>
+            }
+          </form>
+          @if (!deliveryForm.get('scheduleDelivery')?.value) {
+            <p class="mt-4 rounded-xl bg-soft p-4 text-primary/80">{{ defaultDeliveryMessage }}</p>
+          }
+        </div>
+      }
+
+      @if (step() === 4) {
+        <div>
+          <h2 class="mb-4 text-lg font-semibold text-primary">مراجعة الطلب</h2>
+          <div class="space-y-2 border-b border-primary/10 pb-4">
+            @for (item of cartItems(); track item.product.id) {
+              <div class="flex justify-between text-sm">
+                <span>{{ item.product.nameAr }} × {{ item.quantity }}</span>
+                <span>{{ (getProductPrice(item.product) * item.quantity).toFixed(2) }} د.ك</span>
+              </div>
+            }
+          </div>
+          <div class="space-y-1 py-4">
+            <div class="flex justify-between">
+              <span>المجموع الفرعي</span>
+              <span>{{ subtotal().toFixed(2) }} د.ك</span>
+            </div>
+            @if (discountApplied() > 0) {
+              <div class="flex justify-between">
+                <span>الخصم</span>
+                <span>- {{ discountApplied().toFixed(2) }} د.ك</span>
+              </div>
+            }
+            <div class="flex justify-between border-t border-primary/10 pt-4 text-lg font-semibold">
+              <span>الإجمالي</span>
+              <span>{{ total().toFixed(2) }} د.ك</span>
+            </div>
+          </div>
+          <p class="rounded-xl bg-soft p-4 text-primary/80">{{ getDeliveryMessage() }}</p>
+          <button
+            type="button"
+            class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-medium text-white disabled:opacity-60"
+            (click)="submitOrder()"
+            [disabled]="submitLoading()"
+          >
+            <app-hero-icon name="check" size="20" />
+            {{ submitLoading() ? 'جاري التأكيد...' : 'تأكيد الطلب' }}
+          </button>
+        </div>
+      }
+
+      <div
+        class="mt-8 flex border-t border-primary/10 pt-6"
+        [ngClass]="{ 'justify-between': step() > 1, 'justify-end': step() === 1 }"
+      >
+        @if (step() > 1) {
+          <button type="button" class="flex items-center gap-2 rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft" (click)="prevStep()">
+            <app-hero-icon name="chevron-right" size="20" />
+            السابق
+          </button>
+        }
+        @if (step() < 4 && (step() !== 1 || canProceedFromStep1())) {
+          <button type="button" class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-medium text-white" (click)="nextStep()">
+            التالي
+            <app-hero-icon name="chevron-left" size="20" />
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (step() === 4) {
+      <div class="mt-6 rounded-2xl bg-white p-4 shadow-lg">
+        <label for="discountCode" class="mb-2 block font-medium">كود الخصم</label>
+        <div class="flex gap-2">
+          <input
+            id="discountCode"
+            type="text"
+            [value]="discountCode()"
+            (input)="discountCode.set($any($event.target).value)"
+            placeholder="أدخل الكود"
+            class="flex-1 rounded-xl border border-primary/20 px-4 py-2 outline-none focus:ring-2 focus:ring-accent"
+          />
+          <button type="button" class="flex items-center gap-2 rounded-xl bg-yellow px-4 py-2 font-medium text-primary" (click)="applyDiscount()">
+            <app-hero-icon name="ticket" size="20" />
+            تطبيق
+          </button>
+        </div>
+        @if (discountApplied() > 0) {
+          <p class="mt-2 text-accent">تم تطبيق خصم {{ discountApplied().toFixed(2) }} د.ك</p>
+        }
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,47 @@
+@let p = product();
+<div
+  class="group flex h-full flex-row items-stretch overflow-hidden rounded-2xl border border-white/30 bg-white/20 shadow-lg backdrop-blur-xl transition-all duration-300 hover:bg-white/30 hover:shadow-2xl md:flex-col"
+>
+  <!-- Image on the right (for RTL), clickable to go to details -->
+  <a
+    [routerLink]="['/product', p.id]"
+    class="flex h-full w-24 shrink-0 self-stretch overflow-hidden bg-soft/40 md:h-40 md:w-full md:aspect-square"
+  >
+    <img
+      [src]="p.imageUrl"
+      [alt]="p.nameAr"
+      loading="lazy"
+      class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+    />
+  </a>
+
+  <!-- Text/content on the left -->
+  <div class="flex flex-1 flex-col gap-2 p-4 md:p-5">
+    <h3
+      class="text-base font-semibold leading-snug text-primary md:text-lg hover:underline"
+      [routerLink]="['/product', p.id]"
+    >
+      {{ p.nameAr }}
+    </h3>
+    <div class="flex flex-wrap items-center gap-1.5 text-sm md:gap-2">
+      <span
+        class="inline-flex items-center gap-1 rounded-full bg-white/80 px-3 py-1 text-sm font-semibold text-primary shadow-sm backdrop-blur-sm md:px-3.5 md:py-1.5 md:text-base"
+      >
+        {{ getPrice(p) }} د.ك
+      </span>
+      @if (p.discountValue) {
+        <span class="text-sm text-primary/60 line-through md:text-sm">
+          {{ p.price }} د.ك
+        </span>
+      }
+    </div>
+    <button
+      type="button"
+      class="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white transition-all hover:brightness-105 hover:shadow-md active:scale-95 active:shadow-sm md:px-4 md:py-3 md:text-base"
+      (click)="addToCart(p)"
+    >
+      <app-hero-icon name="plus" size="18" />
+      أضف إلى السلة
+    </button>
+  </div>
+</div>

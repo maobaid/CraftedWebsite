@@ -1,0 +1,29 @@
+<h1 class="mb-6 text-2xl font-semibold text-primary">إعدادات التوصيل</h1>
+
+<div class="max-w-2xl rounded-2xl bg-white p-6 shadow-lg">
+  <p class="mb-4 text-sm text-primary/60">هذه الرسالة تظهر للعميل عند عدم اختيار موعد توصيل محدد.</p>
+  <div class="mb-4">
+    <label for="message" class="mb-2 block font-medium">رسالة التوصيل الافتراضية</label>
+    <textarea
+      id="message"
+      [(ngModel)]="form.defaultMessage"
+      rows="3"
+      placeholder="سيتم توصيل طلبك خلال يومي عمل"
+      class="min-h-[80px] w-full resize-y rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent"
+    ></textarea>
+  </div>
+  <div class="mb-6">
+    <label for="minDays" class="mb-2 block font-medium">الحد الأدنى لأيام التوصيل</label>
+    <input
+      id="minDays"
+      type="number"
+      [(ngModel)]="form.minDaysUntilDelivery"
+      min="1"
+      class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent"
+    />
+  </div>
+  <button type="button" class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white" (click)="save()">
+    <app-hero-icon name="check" size="20" />
+    حفظ التعديلات
+  </button>
+</div>

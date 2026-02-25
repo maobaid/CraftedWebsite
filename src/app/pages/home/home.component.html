@@ -1,0 +1,25 @@
+<div class="mx-auto max-w-6xl px-5">
+  <section class="py-8 text-center md:py-12">
+    <h1 class="text-2xl font-semibold text-primary md:text-3xl">
+      حياكم الله في متجر كرافتد
+    </h1>
+    <p class="mt-2 text-primary/70">نشاركم لحظاتكم الحلوه</p>
+  </section>
+
+  <section class="py-4">
+    <h2 class="mb-6 text-xl font-semibold text-primary">آخر المنتجات</h2>
+    @if (products().length) {
+      <div
+        class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        @for (product of products(); track product.id) {
+          <app-product-card [product]="product" />
+        }
+      </div>
+    } @else {
+      <p class="py-12 text-center text-primary/70">
+        لا توجد منتجات متاحة حالياً.
+      </p>
+    }
+  </section>
+</div>

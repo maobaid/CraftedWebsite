@@ -1,0 +1,36 @@
+<div class="flex min-h-screen items-center justify-center bg-soft p-8">
+  <div class="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
+    <h1 class="text-xl font-semibold text-primary">لوحة تحكم الإدارة</h1>
+    <p class="mt-1 text-primary/60">تسجيل الدخول</p>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="mt-6 space-y-4">
+      <div>
+        <label for="username" class="mb-1 block font-medium">اسم المستخدم</label>
+        <input
+          id="username"
+          type="text"
+          formControlName="username"
+          class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent"
+        />
+      </div>
+      <div>
+        <label for="password" class="mb-1 block font-medium">كلمة المرور</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent"
+        />
+      </div>
+      @if (error) {
+        <p class="text-red-600">{{ error }}</p>
+      }
+      <button
+        type="submit"
+        class="w-full rounded-xl bg-primary px-4 py-3 font-medium text-white disabled:opacity-60"
+        [disabled]="form.invalid"
+      >
+        دخول
+      </button>
+    </form>
+  </div>
+</div>

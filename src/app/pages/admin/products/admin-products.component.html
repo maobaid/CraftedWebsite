@@ -1,0 +1,91 @@
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <h1 class="text-2xl font-semibold text-primary">إدارة المنتجات</h1>
+  <button type="button" class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white" (click)="openAdd()">
+    <app-hero-icon name="plus" size="20" />
+    إضافة منتج
+  </button>
+</div>
+
+@if (showForm) {
+  <div class="mb-6 rounded-2xl bg-white p-6 shadow-lg">
+    <h2 class="mb-4 text-lg font-semibold">{{ editingId ? 'تعديل منتج' : 'إضافة منتج' }}</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div>
+        <label class="mb-1 block text-sm font-medium">اسم المنتج (عربي)</label>
+        <input type="text" [(ngModel)]="form.nameAr" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+      </div>
+      <div class="sm:col-span-2">
+        <label class="mb-1 block text-sm font-medium">الوصف (اختياري)</label>
+        <textarea [(ngModel)]="form.descriptionAr" rows="2" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"></textarea>
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">السعر (د.ك)</label>
+        <input type="number" [(ngModel)]="form.price" min="0" step="0.01" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+      </div>
+      <div class="sm:col-span-2">
+        <label class="mb-1 block text-sm font-medium">رابط الصورة</label>
+        <input type="url" [(ngModel)]="form.imageUrl" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">نوع الخصم</label>
+        <select [(ngModel)]="form.discountType" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent">
+          <option [ngValue]="null">بدون خصم</option>
+          <option value="percentage">نسبة مئوية</option>
+          <option value="fixed">مبلغ ثابت</option>
+        </select>
+      </div>
+      @if (form.discountType) {
+        <div>
+          <label class="mb-1 block text-sm font-medium">قيمة الخصم</label>
+          <input type="number" [(ngModel)]="form.discountValue" min="0" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+        </div>
+      }
+      <div class="flex items-center">
+        <label class="flex cursor-pointer items-center gap-2">
+          <input type="checkbox" [(ngModel)]="form.isActive" class="rounded" />
+          المنتج مفعّل
+        </label>
+      </div>
+    </div>
+    <div class="mt-6 flex gap-3">
+      <button type="button" class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft" (click)="showForm = false">إلغاء</button>
+      <button type="button" class="rounded-xl bg-primary px-4 py-2 font-medium text-white" (click)="save()">حفظ</button>
+    </div>
+  </div>
+}
+
+<div class="overflow-hidden rounded-2xl bg-white shadow-lg">
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse text-right">
+      <thead>
+        <tr class="bg-soft">
+          <th class="p-3 font-semibold">الصورة</th>
+          <th class="p-3 font-semibold">الاسم</th>
+          <th class="p-3 font-semibold">السعر</th>
+          <th class="p-3 font-semibold">الخصم</th>
+          <th class="p-3 font-semibold">الحالة</th>
+          <th class="p-3 font-semibold">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of productService.allProducts(); track p.id) {
+          <tr class="border-b border-primary/10">
+            <td class="p-3"><img [src]="p.imageUrl" [alt]="p.nameAr" class="h-12 w-12 rounded-lg object-cover" /></td>
+            <td class="p-3">{{ p.nameAr }}</td>
+            <td class="p-3">{{ p.price }} د.ك</td>
+            <td class="p-3">
+              @if (p.discountValue) {
+                {{ p.discountType === 'percentage' ? p.discountValue + '%' : p.discountValue + ' د.ك' }}
+              } @else { — }
+            </td>
+            <td class="p-3">{{ p.isActive ? 'مفعّل' : 'معطّل' }}</td>
+            <td class="p-3">
+              <button type="button" class="ml-2 rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft" (click)="openEdit(p)">تعديل</button>
+              <button type="button" class="rounded-lg border border-red-600 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50" (click)="delete(p.id)">حذف</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,102 @@
+<div class="mx-auto max-w-6xl px-5">
+  <div class="mb-4 flex items-center justify-between gap-2">
+    <h1 class="text-2xl font-semibold text-primary">سلة المشتريات</h1>
+    <a
+      routerLink="/"
+      class="inline-flex items-center gap-1.5 rounded-xl bg-white/70 px-3 py-1.5 text-sm font-medium text-primary shadow-sm hover:bg-white"
+    >
+      الرجوع
+      <app-hero-icon name="arrow-left" size="18" />
+    </a>
+  </div>
+
+  @if (count()) {
+    <div class="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div class="overflow-hidden rounded-2xl bg-white shadow-lg">
+        @for (item of cart(); track item.product.id) {
+          <div
+            class="flex flex-wrap items-center gap-4 border-b border-primary/10 p-5 last:border-0 sm:flex-nowrap"
+          >
+            <div class="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-soft">
+              <img
+                [src]="item.product.imageUrl"
+                [alt]="item.product.nameAr"
+                class="h-full w-full object-cover"
+              />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h3 class="font-semibold text-primary">
+                {{ item.product.nameAr }}
+              </h3>
+              <p class="text-sm text-primary/60">
+                {{ getPrice(item.product) }} د.ك للوحدة
+              </p>
+              <div class="mt-2 flex flex-wrap items-center gap-1">
+                <button
+                  type="button"
+                  class="flex h-7 w-7 items-center justify-center rounded-lg border border-primary/20 bg-white transition-colors hover:bg-soft"
+                  (click)="updateQty(item.product.id, item.quantity - 1)"
+                >
+                  <app-hero-icon name="minus" size="16" />
+                </button>
+                <span class="min-w-8 text-center font-semibold">{{
+                  item.quantity
+                }}</span>
+                <button
+                  type="button"
+                  class="flex h-7 w-7 items-center justify-center rounded-lg border border-primary/20 bg-white transition-colors hover:bg-soft"
+                  (click)="updateQty(item.product.id, item.quantity + 1)"
+                >
+                  <app-hero-icon name="plus" size="16" />
+                </button>
+                <button
+                  type="button"
+                  class="mr-2 inline-flex items-center gap-1 text-sm text-primary/60 hover:text-primary hover:underline"
+                  (click)="remove(item.product.id)"
+                >
+                  <app-hero-icon name="trash" size="16" />
+                  حذف
+                </button>
+              </div>
+            </div>
+            <div class="font-semibold text-accent">
+              {{ (getPrice(item.product) * item.quantity).toFixed(2) }} د.ك
+            </div>
+          </div>
+        }
+      </div>
+
+      <div
+        class="h-fit rounded-2xl border border-white/30 bg-white/20 p-6 shadow-lg backdrop-blur-xl lg:sticky lg:top-24"
+      >
+        <h2 class="mb-4 text-lg font-semibold text-primary">ملخص الطلب</h2>
+        <div class="flex justify-between py-2">
+          <span>المجموع الفرعي</span>
+          <span>{{ subtotal().toFixed(2) }} د.ك</span>
+        </div>
+        <div
+          class="flex justify-between border-t border-primary/10 pt-4 text-lg font-semibold"
+        >
+          <span>الإجمالي</span>
+          <span>{{ subtotal().toFixed(2) }} د.ك</span>
+        </div>
+        <a
+          routerLink="/checkout"
+          class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 font-medium text-white shadow transition-all hover:shadow-md"
+        >
+          إتمام الطلب
+        </a>
+      </div>
+    </div>
+  } @else {
+    <div class="rounded-2xl bg-white p-12 text-center shadow-lg">
+      <p class="mb-4 text-primary/70">سلة المشتريات فارغة.</p>
+      <a
+        routerLink="/"
+        class="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 font-medium text-white hover:brightness-105"
+      >
+        تسوق الآن
+      </a>
+    </div>
+  }
+</div>

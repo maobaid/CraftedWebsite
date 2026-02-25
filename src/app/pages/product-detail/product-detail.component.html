@@ -1,0 +1,56 @@
+<div class="mx-auto max-w-4xl px-5">
+  @if (product) {
+    <div class="mb-4 flex items-center justify-between gap-2">
+      <h1 class="text-2xl font-semibold text-primary">تفاصيل المنتج</h1>
+      <a
+        routerLink="/"
+        class="inline-flex items-center gap-1.5 rounded-xl bg-white/70 px-3 py-1.5 text-sm font-medium text-primary shadow-sm hover:bg-white"
+      >
+        الرجوع
+        <app-hero-icon name="arrow-left" size="18" />
+      </a>
+    </div>
+    <div
+      class="mt-2 overflow-hidden rounded-2xl bg-white shadow-lg md:grid md:grid-cols-2"
+    >
+      <div class="aspect-square bg-soft">
+        <img
+          [src]="product.imageUrl"
+          [alt]="product.nameAr"
+          class="h-full w-full object-cover"
+        />
+      </div>
+      <div class="flex flex-col gap-4 p-6 md:p-8">
+        <h1 class="text-2xl font-semibold text-primary">
+          {{ product.nameAr }}
+        </h1>
+        @if (product.descriptionAr) {
+          <p class="text-primary/70 leading-relaxed">
+            {{ product.descriptionAr }}
+          </p>
+        }
+        <div class="flex flex-wrap items-center gap-2">
+          @if (product.discountValue) {
+            <span class="text-primary/60 line-through"
+              >{{ product.price }} د.ك</span
+            >
+          }
+          <span class="text-2xl font-semibold text-accent"
+            >{{ getPrice(product) }} د.ك</span
+          >
+        </div>
+        <button
+          type="button"
+          class="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 text-lg font-medium text-white transition-transform duration-150 hover:brightness-105 active:scale-95 active:shadow-sm"
+          (click)="addToCart()"
+        >
+          <app-hero-icon name="plus" size="22" />
+          أضف إلى السلة
+        </button>
+      </div>
+    </div>
+  } @else {
+    <p class="py-12 text-center text-primary/70">المنتج غير موجود.</p>
+    <a routerLink="/" class="text-accent hover:underline">العودة للرئيسية</a>
+  }
+</div>

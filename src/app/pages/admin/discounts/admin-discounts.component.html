@@ -1,0 +1,81 @@
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <h1 class="text-2xl font-semibold text-primary">إدارة الخصومات</h1>
+  <button type="button" class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white" (click)="openAdd()">
+    <app-hero-icon name="plus" size="20" />
+    إنشاء كود خصم
+  </button>
+</div>
+
+@if (showForm) {
+  <div class="mb-6 rounded-2xl bg-white p-6 shadow-lg">
+    <h2 class="mb-4 text-lg font-semibold">كود خصم جديد</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div>
+        <label class="mb-1 block text-sm font-medium">الكود</label>
+        <input type="text" [(ngModel)]="form.code" placeholder="SUMMER20" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">النوع</label>
+        <select [(ngModel)]="form.type" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent">
+          <option value="percentage">نسبة مئوية</option>
+          <option value="fixed">مبلغ ثابت</option>
+        </select>
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">القيمة</label>
+        <input type="number" [(ngModel)]="form.value" min="0" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">تاريخ الانتهاء</label>
+        <input type="date" [(ngModel)]="form.expiresAt" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">عدد مرات الاستخدام</label>
+        <input type="number" [(ngModel)]="form.maxUses" min="1" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+      </div>
+      <div class="flex items-center">
+        <label class="flex cursor-pointer items-center gap-2">
+          <input type="checkbox" [(ngModel)]="form.isActive" class="rounded" />
+          مفعّل
+        </label>
+      </div>
+    </div>
+    <div class="mt-6 flex gap-3">
+      <button type="button" class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft" (click)="showForm = false">إلغاء</button>
+      <button type="button" class="rounded-xl bg-primary px-4 py-2 font-medium text-white" (click)="save()">حفظ</button>
+    </div>
+  </div>
+}
+
+<div class="overflow-hidden rounded-2xl bg-white shadow-lg">
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse text-right">
+      <thead>
+        <tr class="bg-soft">
+          <th class="p-3 font-semibold">الكود</th>
+          <th class="p-3 font-semibold">النوع</th>
+          <th class="p-3 font-semibold">القيمة</th>
+          <th class="p-3 font-semibold">الانتهاء</th>
+          <th class="p-3 font-semibold">الاستخدام</th>
+          <th class="p-3 font-semibold">الحالة</th>
+          <th class="p-3 font-semibold">إجراء</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of discountService.discounts(); track d.id) {
+          <tr class="border-b border-primary/10">
+            <td class="p-3 font-semibold">{{ d.code }}</td>
+            <td class="p-3">{{ d.type === 'percentage' ? 'نسبة' : 'مبلغ' }}</td>
+            <td class="p-3">{{ d.type === 'percentage' ? d.value + '%' : d.value + ' د.ك' }}</td>
+            <td class="p-3">{{ d.expiresAt | date:'yyyy-MM-dd' }}</td>
+            <td class="p-3">{{ d.usedCount }} / {{ d.maxUses }}</td>
+            <td class="p-3">{{ d.isActive ? 'مفعّل' : 'معطّل' }}</td>
+            <td class="p-3">
+              <button type="button" class="rounded-lg border border-red-600 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50" (click)="delete(d.id)">حذف</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

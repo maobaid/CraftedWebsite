@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #252442;
+  --color-soft: #c6ccee;
+  --color-accent: #43bfbf;
+  --color-yellow: #fdd600;
+  --font-sans: 'Tajawal', ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  direction: rtl;
+  font-family: 'Tajawal', sans-serif;
+}
+
+body {
+  @apply min-h-screen bg-soft text-primary antialiased;
+}
+
+input, select, textarea {
+  @apply font-sans;
+  direction: rtl;
+}
+
+input::placeholder,
+textarea::placeholder {
+  text-align: right;
+}
+
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-accent;
+}
+
+/* Utility for strong blurred background blobs */
+.bg-blur {
+  filter: blur(80px);
+}

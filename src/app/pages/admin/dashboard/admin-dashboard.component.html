@@ -1,0 +1,19 @@
+<h1 class="mb-6 text-2xl font-semibold text-primary">لوحة التحكم</h1>
+<div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <div class="rounded-2xl bg-white p-6 text-center shadow-lg">
+    <span class="block text-3xl font-semibold text-accent">{{ productService.products().length }}</span>
+    <span class="text-primary/60">المنتجات النشطة</span>
+  </div>
+  <div class="rounded-2xl bg-white p-6 text-center shadow-lg">
+    <span class="block text-3xl font-semibold text-accent">{{ orderService.orders().length }}</span>
+    <span class="text-primary/60">إجمالي الطلبات</span>
+  </div>
+  <div class="rounded-2xl bg-white p-6 text-center shadow-lg">
+    <span class="block text-3xl font-semibold text-accent">{{ orderService.getOrdersByStatus('pending').length }}</span>
+    <span class="text-primary/60">قيد الانتظار</span>
+  </div>
+</div>
+<div class="flex flex-wrap gap-4">
+  <a routerLink="/admin/products" class="rounded-xl bg-primary px-5 py-2.5 font-medium text-white hover:shadow-md">إدارة المنتجات</a>
+  <a routerLink="/admin/orders" class="rounded-xl bg-accent px-5 py-2.5 font-medium text-white hover:brightness-105">عرض الطلبات</a>
+</div>

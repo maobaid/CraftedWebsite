@@ -1,0 +1,65 @@
+<div class="flex min-h-screen">
+  <aside class="flex w-64 shrink-0 flex-col bg-primary text-white">
+    <div class="border-b border-white/20 p-5">
+      <span class="font-semibold">لوحة الإدارة</span>
+    </div>
+    <nav class="flex-1 space-y-0.5 p-3">
+      <a
+        routerLink="/admin"
+        routerLinkActive="bg-white/15"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-colors hover:bg-white/10"
+      >
+        <app-hero-icon name="building-storefront" size="20" />
+        الرئيسية
+      </a>
+      <a routerLink="/admin/products" routerLinkActive="bg-white/15" class="flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-colors hover:bg-white/10">
+        <app-hero-icon name="gift" size="20" />
+        المنتجات
+      </a>
+      <a routerLink="/admin/discounts" routerLinkActive="bg-white/15" class="flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-colors hover:bg-white/10">
+        <app-hero-icon name="ticket" size="20" />
+        الخصومات
+      </a>
+      <a routerLink="/admin/orders" routerLinkActive="bg-white/15" class="flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-colors hover:bg-white/10">
+        <app-hero-icon name="clipboard-document-list" size="20" />
+        الطلبات
+      </a>
+      <a routerLink="/admin/customers" routerLinkActive="bg-white/15" class="flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-colors hover:bg-white/10">
+        <app-hero-icon name="users" size="20" />
+        العملاء
+      </a>
+      <a routerLink="/admin/delivery" routerLinkActive="bg-white/15" class="flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-colors hover:bg-white/10">
+        <app-hero-icon name="truck" size="20" />
+        إعدادات التوصيل
+      </a>
+    </nav>
+    <div class="border-t border-white/20 p-4 space-y-2">
+      <a routerLink="/" class="block text-accent hover:underline">عرض الموقع</a>
+      <button
+        type="button"
+        class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/30 px-4 py-2 text-white transition-colors hover:bg-white/10"
+        (click)="auth.logout()"
+      >
+        <app-hero-icon name="arrow-right-on-rectangle" size="18" />
+        تسجيل الخروج
+      </button>
+    </div>
+  </aside>
+  <main class="min-w-0 flex-1 overflow-auto bg-soft">
+    <header class="sticky top-0 z-10 flex items-center justify-between border-b border-primary/10 bg-white/80 px-6 py-3 backdrop-blur-sm">
+      <span class="text-primary font-medium">لوحة التحكم</span>
+      <button
+        type="button"
+        class="flex items-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-soft"
+        (click)="auth.logout()"
+      >
+        <app-hero-icon name="arrow-right-on-rectangle" size="18" />
+        تسجيل الخروج
+      </button>
+    </header>
+    <div class="p-8">
+      <router-outlet />
+    </div>
+  </main>
+</div>

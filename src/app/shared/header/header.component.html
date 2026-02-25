@@ -1,0 +1,32 @@
+<header class="fixed inset-x-0 top-0 z-50 bg-primary text-white shadow-lg">
+  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+    <a
+      routerLink="/"
+      class="flex items-center gap-2 transition-opacity hover:opacity-90"
+    >
+      <img
+        src="/logo.PNG"
+        alt="متجر كرافتد"
+        class="h-11 w-auto object-contain"
+      />
+      <!-- <p>Crafted & Gifted</p> -->
+    </a>
+    <nav class="flex items-center gap-6">
+      <a
+        routerLink="/cart"
+        routerLinkActive="bg-white/15"
+        class="flex items-center gap-2 rounded-xl px-3 py-2 font-medium transition-colors hover:bg-white/10"
+      >
+        <app-hero-icon name="shopping-cart" size="20" />
+        السلة
+        @if (cart.count()) {
+          <span
+            class="flex h-5 min-w-5 items-center justify-center rounded-full bg-yellow text-xs pt-1 font-semibold text-primary"
+          >
+            {{ cart.count() }}
+          </span>
+        }
+      </a>
+    </nav>
+  </div>
+</header>
