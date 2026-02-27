@@ -27,8 +27,6 @@ export class CheckoutComponent {
   verifyLoading = signal(false);
   submitLoading = signal(false);
   otpError = signal('');
-  discountCode = signal('');
-  discountApplied = signal<number>(0);
   defaultDeliveryMessage = '';
 
   private fb = inject(FormBuilder);
@@ -69,6 +67,7 @@ export class CheckoutComponent {
 
   cartItems = computed(() => this.cart.cart());
   subtotal = computed(() => this.cart.subtotal());
+  discountApplied = computed(() => this.discountService.getAppliedDiscountAmount(this.subtotal()));
   total = computed(() => Math.max(0, this.subtotal() - this.discountApplied()));
   canProceedFromStep1 = computed(() => this.phoneVerified());
 
@@ -131,13 +130,6 @@ export class CheckoutComponent {
     this.step.update((s) => Math.max(1, s - 1));
   }
 
-  applyDiscount(): void {
-    const code = this.discountCode().trim();
-    if (!code) return;
-    const result = this.discountService.applyDiscount(this.subtotal(), code);
-    this.discountApplied.set(result.amount);
-  }
-
   getDeliveryMessage(): string {
     const delivery = this.deliveryForm.value;
     if (delivery.scheduleDelivery && delivery.date) {
@@ -182,7 +174,7 @@ export class CheckoutComponent {
       status: 'pending' as const,
       deliverySlot,
       deliveryMessage: this.getDeliveryMessage(),
-      discountCode: this.discountCode().trim() || undefined,
+      discountCode: this.discountService.appliedCode() || undefined,
       discountAmount: this.discountApplied() || undefined,
       paymentStatus: 'pending' as const,
     };
@@ -190,6 +182,7 @@ export class CheckoutComponent {
     this.submitLoading.set(true);
     const created = this.orderService.createOrder(order);
     this.cart.clear();
+    this.discountService.clearAppliedCoupon();
     this.submitLoading.set(false);
     this.router.navigate(['/order-success', created.id]);
   }

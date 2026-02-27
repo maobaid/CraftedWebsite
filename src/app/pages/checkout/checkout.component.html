@@ -152,8 +152,8 @@
               <span>{{ subtotal().toFixed(2) }} د.ك</span>
             </div>
             @if (discountApplied() > 0) {
-              <div class="flex justify-between">
-                <span>الخصم</span>
+              <div class="flex justify-between text-accent">
+                <span>الخصم (كوبون)</span>
                 <span>- {{ discountApplied().toFixed(2) }} د.ك</span>
               </div>
             }
@@ -194,27 +194,5 @@
       </div>
     </div>
 
-    @if (step() === 4) {
-      <div class="mt-6 rounded-2xl bg-white p-4 shadow-lg">
-        <label for="discountCode" class="mb-2 block font-medium">كود الخصم</label>
-        <div class="flex gap-2">
-          <input
-            id="discountCode"
-            type="text"
-            [value]="discountCode()"
-            (input)="discountCode.set($any($event.target).value)"
-            placeholder="أدخل الكود"
-            class="flex-1 rounded-xl border border-primary/20 px-4 py-2 outline-none focus:ring-2 focus:ring-accent"
-          />
-          <button type="button" class="flex items-center gap-2 rounded-xl bg-yellow px-4 py-2 font-medium text-primary" (click)="applyDiscount()">
-            <app-hero-icon name="ticket" size="20" />
-            تطبيق
-          </button>
-        </div>
-        @if (discountApplied() > 0) {
-          <p class="mt-2 text-accent">تم تطبيق خصم {{ discountApplied().toFixed(2) }} د.ك</p>
-        }
-      </div>
-    }
   }
 </div>

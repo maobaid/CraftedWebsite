@@ -1,11 +1,12 @@
-export interface DiscountCode {
-  id: string;
+// Coupon model matches backend CouponDto exactly
+export type CouponType = 'PERCENTAGE' | 'FIXED';
+
+export interface Coupon {
   code: string;
-  type: 'percentage' | 'fixed';
+  type: CouponType;
   value: number;
-  expiresAt: string;
-  maxUses: number;
-  usedCount: number;
-  isActive: boolean;
-  createdAt?: string;
+  minimum_order_amount: number | null;
+  expires_at: string;
+  usage_limit: number | null;
+  is_active: boolean;
 }
