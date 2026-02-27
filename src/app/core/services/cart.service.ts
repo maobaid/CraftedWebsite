@@ -1,6 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { CartItem } from '../models/product.model';
-import { getProductPrice } from '../models/product.model';
+import { ProductDiscountService } from './product-discount.service';
 
 const CART_STORAGE_KEY = 'crafted_cart';
 
@@ -10,9 +10,16 @@ export class CartService {
 
   cart = this.cartSignal.asReadonly();
   count = computed(() => this.cartSignal().reduce((sum, i) => sum + i.quantity, 0));
-  subtotal = computed(() =>
-    this.cartSignal().reduce((sum, i) => sum + getProductPrice(i.product) * i.quantity, 0)
-  );
+
+  constructor(private productDiscountService: ProductDiscountService) {}
+
+  subtotal = computed(() => {
+    this.productDiscountService.discounts();
+    return this.cartSignal().reduce(
+      (sum, i) => sum + this.productDiscountService.getEffectivePrice(i.product).price * i.quantity,
+      0
+    );
+  });
 
   private loadCart(): CartItem[] {
     try {

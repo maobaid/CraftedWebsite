@@ -29,7 +29,7 @@
                 {{ item.product.nameAr }}
               </h3>
               <p class="text-sm text-primary/60">
-                {{ getPrice(item.product) }} د.ك للوحدة
+                {{ getPriceInfo(item).price }} د.ك للوحدة
               </p>
               <div class="mt-2 flex flex-wrap items-center gap-1">
                 <button
@@ -60,7 +60,7 @@
               </div>
             </div>
             <div class="font-semibold text-accent">
-              {{ (getPrice(item.product) * item.quantity).toFixed(2) }} د.ك
+              {{ (getPriceInfo(item).price * item.quantity).toFixed(2) }} د.ك
             </div>
           </div>
         }

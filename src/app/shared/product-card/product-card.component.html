@@ -23,17 +23,16 @@
     >
       {{ p.nameAr }}
     </h3>
+    @let priceInfo = effectivePrice();
     <div class="flex flex-wrap items-center gap-1.5 text-sm md:gap-2">
+      @if (priceInfo.discount) {
+        <span class="text-sm text-primary/60 line-through">{{ priceInfo.originalPrice }} د.ك</span>
+      }
       <span
         class="inline-flex items-center gap-1 rounded-full bg-white/80 px-3 py-1 text-sm font-semibold text-primary shadow-sm backdrop-blur-sm md:px-3.5 md:py-1.5 md:text-base"
       >
-        {{ getPrice(p) }} د.ك
+        {{ priceInfo.price }} د.ك
       </span>
-      @if (p.discountValue) {
-        <span class="text-sm text-primary/60 line-through md:text-sm">
-          {{ p.price }} د.ك
-        </span>
-      }
     </div>
     <button
       type="button"

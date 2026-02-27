@@ -5,6 +5,15 @@ import { AuthService } from './auth.service';
 
 const DEFAULT_STORE_ID = 'e0a4703a-e743-4b18-ae6a-4df83f768282';
 
+/** API response for GET /stores/{storeId}/products */
+interface ProductsListResponse {
+  data: ProductApi[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   private productsSignal = signal<Product[]>([]);
@@ -44,10 +53,10 @@ export class ProductService {
       this.productsSignal.set([]);
       return;
     }
-    this.http.get<ProductApi[] | ProductApi>(`/stores/${storeId}/products`, this.getAuthHeaders()).subscribe({
-        next: (list) => {
-          const arr = Array.isArray(list) ? list : list ? [list] : [];
-          this.productsSignal.set(arr.map(productFromApi));
+    this.http.get<ProductsListResponse>(`/stores/${storeId}/products`, this.getAuthHeaders()).subscribe({
+        next: (res) => {
+          const list = Array.isArray(res?.data) ? res.data : [];
+          this.productsSignal.set(list.map(productFromApi));
         },
         error: () => {
           this.productsSignal.set([]);

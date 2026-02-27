@@ -1,37 +1,50 @@
 <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-  <h1 class="text-2xl font-semibold text-primary">إدارة الخصومات</h1>
+  <h1 class="text-2xl font-semibold text-primary">إدارة خصومات المنتجات</h1>
   <button type="button" class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white" (click)="openAdd()">
     <app-hero-icon name="plus" size="20" />
-    إنشاء كود خصم
+    إضافة خصم
   </button>
 </div>
 
 @if (showForm) {
   <div class="mb-6 rounded-2xl bg-white p-6 shadow-lg">
-    <h2 class="mb-4 text-lg font-semibold">كود خصم جديد</h2>
+    <h2 class="mb-4 text-lg font-semibold">{{ editingId ? 'تعديل خصم' : 'إضافة خصم' }}</h2>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <div>
-        <label class="mb-1 block text-sm font-medium">الكود</label>
-        <input type="text" [(ngModel)]="form.code" placeholder="SUMMER20" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+        <label class="mb-1 block text-sm font-medium">الاسم *</label>
+        <input type="text" [(ngModel)]="form.name" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" placeholder="مثال: خصم الصيف" />
       </div>
       <div>
-        <label class="mb-1 block text-sm font-medium">النوع</label>
-        <select [(ngModel)]="form.type" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent">
-          <option value="percentage">نسبة مئوية</option>
-          <option value="fixed">مبلغ ثابت</option>
+        <label class="mb-1 block text-sm font-medium">النسبة المئوية *</label>
+        <input type="number" [(ngModel)]="form.percentage" min="0" max="100" step="0.01" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">ينطبق على *</label>
+        <select [(ngModel)]="form.applies_to" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent">
+          @for (opt of appliesToOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
         </select>
       </div>
+      @if (form.applies_to === 'CATEGORY') {
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-sm font-medium">معرف التصنيف (category_id)</label>
+          <input type="text" [(ngModel)]="form.category_id" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" placeholder="UUID" />
+        </div>
+      }
+      @if (form.applies_to === 'SPECIFIC_PRODUCTS') {
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-sm font-medium">معرفات المنتجات (مفصولة بفاصلة أو مسافة) *</label>
+          <textarea [(ngModel)]="form.product_ids_str" rows="2" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" placeholder="id1, id2, id3"></textarea>
+        </div>
+      }
       <div>
-        <label class="mb-1 block text-sm font-medium">القيمة</label>
-        <input type="number" [(ngModel)]="form.value" min="0" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+        <label class="mb-1 block text-sm font-medium">تاريخ البداية *</label>
+        <input type="date" [(ngModel)]="form.start_date" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
       </div>
       <div>
-        <label class="mb-1 block text-sm font-medium">تاريخ الانتهاء</label>
-        <input type="date" [(ngModel)]="form.expiresAt" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
-      </div>
-      <div>
-        <label class="mb-1 block text-sm font-medium">عدد مرات الاستخدام</label>
-        <input type="number" [(ngModel)]="form.maxUses" min="1" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+        <label class="mb-1 block text-sm font-medium">تاريخ النهاية *</label>
+        <input type="date" [(ngModel)]="form.end_date" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
       </div>
       <div class="flex items-center">
         <label class="flex cursor-pointer items-center gap-2">
@@ -52,26 +65,27 @@
     <table class="w-full border-collapse text-right">
       <thead>
         <tr class="bg-soft">
-          <th class="p-3 font-semibold">الكود</th>
-          <th class="p-3 font-semibold">النوع</th>
-          <th class="p-3 font-semibold">القيمة</th>
-          <th class="p-3 font-semibold">الانتهاء</th>
-          <th class="p-3 font-semibold">الاستخدام</th>
+          <th class="p-3 font-semibold">الاسم</th>
+          <th class="p-3 font-semibold">النسبة</th>
+          <th class="p-3 font-semibold">ينطبق على</th>
+          <th class="p-3 font-semibold">من - إلى</th>
           <th class="p-3 font-semibold">الحالة</th>
-          <th class="p-3 font-semibold">إجراء</th>
+          <th class="p-3 font-semibold">إجراءات</th>
         </tr>
       </thead>
       <tbody>
         @for (d of discountService.discounts(); track d.id) {
           <tr class="border-b border-primary/10">
-            <td class="p-3 font-semibold">{{ d.code }}</td>
-            <td class="p-3">{{ d.type === 'percentage' ? 'نسبة' : 'مبلغ' }}</td>
-            <td class="p-3">{{ d.type === 'percentage' ? d.value + '%' : d.value + ' د.ك' }}</td>
-            <td class="p-3">{{ d.expiresAt | date:'yyyy-MM-dd' }}</td>
-            <td class="p-3">{{ d.usedCount }} / {{ d.maxUses }}</td>
-            <td class="p-3">{{ d.isActive ? 'مفعّل' : 'معطّل' }}</td>
+            <td class="p-3 font-medium">{{ d.name }}</td>
+            <td class="p-3">{{ d.percentage }}%</td>
+            <td class="p-3">{{ appliesToLabel(d.applies_to) }}</td>
+            <td class="p-3 text-sm">{{ d.start_date | date:'yyyy-MM-dd' }} – {{ d.end_date | date:'yyyy-MM-dd' }}</td>
+            <td class="p-3">{{ d.is_active !== false ? 'مفعّل' : 'معطّل' }}</td>
             <td class="p-3">
-              <button type="button" class="rounded-lg border border-red-600 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50" (click)="delete(d.id)">حذف</button>
+              @if (d.id) {
+                <button type="button" class="ml-2 rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft" (click)="openEdit(d)">تعديل</button>
+                <button type="button" class="rounded-lg border border-red-600 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50" (click)="delete(d.id)">حذف</button>
+              }
             </td>
           </tr>
         }

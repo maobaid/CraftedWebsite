@@ -19,8 +19,6 @@ export class AdminProductsComponent {
     price: 0,
     imageUrl: '',
     category_id: '' as string,
-    discountType: 'percentage' as 'percentage' | 'fixed' | null,
-    discountValue: 0,
     isActive: true,
   };
 
@@ -34,8 +32,6 @@ export class AdminProductsComponent {
       price: 0,
       imageUrl: '',
       category_id: '',
-      discountType: null,
-      discountValue: 0,
       isActive: true,
     };
     this.showForm = true;
@@ -49,8 +45,6 @@ export class AdminProductsComponent {
       price: p.price,
       imageUrl: p.imageUrl,
       category_id: p.category_id ?? '',
-      discountType: p.discountType ?? null,
-      discountValue: p.discountValue ?? 0,
       isActive: p.isActive,
     };
     this.showForm = true;
@@ -68,8 +62,6 @@ export class AdminProductsComponent {
       price: this.form.price,
       imageUrl: image,
       category_id: category || undefined,
-      discountType: this.form.discountType ?? undefined,
-      discountValue: this.form.discountValue || undefined,
       isActive: this.form.isActive,
     };
     if (this.editingId) {

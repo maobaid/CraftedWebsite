@@ -8,7 +8,8 @@ import { OrderService } from '../../core/services/order.service';
 import { OtpService } from '../../core/services/otp.service';
 import { DeliverySettingsService } from '../../core/services/delivery-settings.service';
 import { DiscountService } from '../../core/services/discount.service';
-import { getProductPrice } from '../../core/models/product.model';
+import { ProductDiscountService } from '../../core/services/product-discount.service';
+import { CartItem } from '../../core/models/product.model';
 import { CustomerInfo, DeliverySlot } from '../../core/models/order.model';
 import { HeroIconComponent } from '../../shared/icons/hero-icon.component';
 
@@ -147,7 +148,12 @@ export class CheckoutComponent {
     return this.defaultDeliveryMessage;
   }
 
-  getProductPrice = getProductPrice;
+  private productDiscountService = inject(ProductDiscountService);
+
+  getPriceInfo(item: CartItem) {
+    this.productDiscountService.discounts();
+    return this.productDiscountService.getEffectivePrice(item.product);
+  }
 
   submitOrder(): void {
     const phone = this.phoneForm.get('phone')?.value?.trim() ?? '';

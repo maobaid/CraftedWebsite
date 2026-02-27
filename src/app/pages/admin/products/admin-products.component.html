@@ -30,20 +30,6 @@
         <label class="mb-1 block text-sm font-medium">معرف التصنيف (category_id)</label>
         <input type="text" [(ngModel)]="form.category_id" placeholder="3fa85f64-5717-4562-b3fc-2c963f66afa6" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
       </div>
-      <div>
-        <label class="mb-1 block text-sm font-medium">نوع الخصم</label>
-        <select [(ngModel)]="form.discountType" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent">
-          <option [ngValue]="null">بدون خصم</option>
-          <option value="percentage">نسبة مئوية</option>
-          <option value="fixed">مبلغ ثابت</option>
-        </select>
-      </div>
-      @if (form.discountType) {
-        <div>
-          <label class="mb-1 block text-sm font-medium">قيمة الخصم</label>
-          <input type="number" [(ngModel)]="form.discountValue" min="0" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
-        </div>
-      }
       <div class="flex items-center">
         <label class="flex cursor-pointer items-center gap-2">
           <input type="checkbox" [(ngModel)]="form.isActive" class="rounded" />
@@ -66,7 +52,6 @@
           <th class="p-3 font-semibold">الصورة</th>
           <th class="p-3 font-semibold">الاسم</th>
           <th class="p-3 font-semibold">السعر</th>
-          <th class="p-3 font-semibold">الخصم</th>
           <th class="p-3 font-semibold">الحالة</th>
           <th class="p-3 font-semibold">إجراءات</th>
         </tr>
@@ -77,11 +62,6 @@
             <td class="p-3"><img [src]="p.imageUrl || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'" [alt]="p.nameAr" class="h-12 w-12 rounded-lg object-cover" /></td>
             <td class="p-3">{{ p.nameAr }}</td>
             <td class="p-3">{{ p.price }} د.ك</td>
-            <td class="p-3">
-              @if (p.discountValue) {
-                {{ p.discountType === 'percentage' ? p.discountValue + '%' : p.discountValue + ' د.ك' }}
-              } @else { — }
-            </td>
             <td class="p-3">{{ p.isActive ? 'مفعّل' : 'معطّل' }}</td>
             <td class="p-3">
               <button type="button" class="ml-2 rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft" (click)="openEdit(p)">تعديل</button>
