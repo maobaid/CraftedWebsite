@@ -1,6 +1,10 @@
 <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
   <h1 class="text-2xl font-semibold text-primary">إدارة المنتجات</h1>
-  <button type="button" class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white" (click)="openAdd()">
+  <button
+    type="button"
+    class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
+    (click)="openAdd()"
+  >
     <app-hero-icon name="plus" size="20" />
     إضافة منتج
   </button>
@@ -8,38 +12,77 @@
 
 @if (showForm) {
   <div class="mb-6 rounded-2xl bg-white p-6 shadow-lg">
-    <h2 class="mb-4 text-lg font-semibold">{{ editingId ? 'تعديل منتج' : 'إضافة منتج' }}</h2>
+    <h2 class="mb-4 text-lg font-semibold">
+      {{ editingId ? "تعديل منتج" : "إضافة منتج" }}
+    </h2>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <div>
         <label class="mb-1 block text-sm font-medium">اسم المنتج (عربي)</label>
-        <input type="text" [(ngModel)]="form.nameAr" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+        <input
+          type="text"
+          [(ngModel)]="form.title"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+        />
       </div>
       <div class="sm:col-span-2">
         <label class="mb-1 block text-sm font-medium">الوصف (اختياري)</label>
-        <textarea [(ngModel)]="form.descriptionAr" rows="2" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"></textarea>
+        <textarea
+          [(ngModel)]="form.description"
+          rows="2"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+        ></textarea>
       </div>
       <div>
         <label class="mb-1 block text-sm font-medium">السعر (د.ك)</label>
-        <input type="number" [(ngModel)]="form.price" min="0" step="0.01" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+        <input
+          type="number"
+          [(ngModel)]="form.price"
+          min="0"
+          step="0.01"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+        />
       </div>
       <div class="sm:col-span-2">
         <label class="mb-1 block text-sm font-medium">رابط الصورة</label>
-        <input type="url" [(ngModel)]="form.imageUrl" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+        <input
+          type="url"
+          [(ngModel)]="form.image_url"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+        />
       </div>
       <div class="sm:col-span-2">
-        <label class="mb-1 block text-sm font-medium">معرف التصنيف (category_id)</label>
-        <input type="text" [(ngModel)]="form.category_id" placeholder="3fa85f64-5717-4562-b3fc-2c963f66afa6" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+        <label class="mb-1 block text-sm font-medium"
+          >معرف التصنيف (category_id)</label
+        >
+        <input
+          type="text"
+          [(ngModel)]="form.category_id"
+          placeholder="3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+        />
       </div>
       <div class="flex items-center">
         <label class="flex cursor-pointer items-center gap-2">
-          <input type="checkbox" [(ngModel)]="form.isActive" class="rounded" />
+          <input type="checkbox" [(ngModel)]="form.is_active" class="rounded" />
           المنتج مفعّل
         </label>
       </div>
     </div>
     <div class="mt-6 flex gap-3">
-      <button type="button" class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft" (click)="showForm = false">إلغاء</button>
-      <button type="button" class="rounded-xl bg-primary px-4 py-2 font-medium text-white" (click)="save()">حفظ</button>
+      <button
+        type="button"
+        class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft"
+        (click)="showForm = false"
+      >
+        إلغاء
+      </button>
+      <button
+        type="button"
+        class="rounded-xl bg-primary px-4 py-2 font-medium text-white"
+        (click)="save()"
+      >
+        حفظ
+      </button>
     </div>
   </div>
 }
@@ -48,7 +91,7 @@
   <div class="overflow-x-auto">
     <table class="w-full border-collapse text-right">
       <thead>
-        <tr class="bg-soft">
+        <tr class="bg-primary text-white">
           <th class="p-3 font-semibold">الصورة</th>
           <th class="p-3 font-semibold">الاسم</th>
           <th class="p-3 font-semibold">السعر</th>
@@ -59,13 +102,33 @@
       <tbody>
         @for (p of productService.allProducts(); track p.id) {
           <tr class="border-b border-primary/10">
-            <td class="p-3"><img [src]="p.imageUrl || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'" [alt]="p.nameAr" class="h-12 w-12 rounded-lg object-cover" /></td>
-            <td class="p-3">{{ p.nameAr }}</td>
-            <td class="p-3">{{ p.price }} د.ك</td>
-            <td class="p-3">{{ p.isActive ? 'مفعّل' : 'معطّل' }}</td>
             <td class="p-3">
-              <button type="button" class="ml-2 rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft" (click)="openEdit(p)">تعديل</button>
-              <button type="button" class="rounded-lg border border-red-600 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50" (click)="delete(p.id)">حذف</button>
+              <img
+                [src]="
+                  p.image_url || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'
+                "
+                [alt]="p.title"
+                class="h-12 w-12 rounded-lg object-cover"
+              />
+            </td>
+            <td class="p-3">{{ p.title }}</td>
+            <td class="p-3">{{ p.price }} د.ك</td>
+            <td class="p-3">{{ p.is_active ? "مفعّل" : "معطّل" }}</td>
+            <td class="p-3">
+              <button
+                type="button"
+                class="ml-2 rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft"
+                (click)="openEdit(p)"
+              >
+                تعديل
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border border-red-600 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                (click)="delete(p.id)"
+              >
+                حذف
+              </button>
             </td>
           </tr>
         }

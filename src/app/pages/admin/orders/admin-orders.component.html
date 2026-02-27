@@ -35,7 +35,7 @@
         <p><strong>الإجمالي:</strong> {{ order.total.toFixed(2) }} د.ك</p>
         <div class="mt-2 flex flex-wrap gap-2">
           @for (item of order.items; track item.product.id) {
-            <span class="rounded-lg bg-soft px-2 py-1 text-xs">{{ item.product.nameAr }} × {{ item.quantity }}</span>
+            <span class="rounded-lg bg-soft px-2 py-1 text-xs">{{ item.product.title }} × {{ item.quantity }}</span>
           }
         </div>
       </div>

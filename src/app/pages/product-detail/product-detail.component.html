@@ -15,18 +15,18 @@
     >
       <div class="aspect-square bg-soft">
         <img
-          [src]="product.imageUrl || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
-          [alt]="product.nameAr"
+          [src]="product.image_url || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
+          [alt]="product.title"
           class="h-full w-full object-cover"
         />
       </div>
       <div class="flex flex-col gap-4 p-6 md:p-8">
         <h1 class="text-2xl font-semibold text-primary">
-          {{ product.nameAr }}
+          {{ product.title }}
         </h1>
-        @if (product.descriptionAr) {
+        @if (product.description) {
           <p class="text-primary/70 leading-relaxed">
-            {{ product.descriptionAr }}
+            {{ product.description }}
           </p>
         }
         @if (priceInfo) {

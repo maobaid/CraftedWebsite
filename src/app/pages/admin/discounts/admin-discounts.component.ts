@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { AppliesTo, ProductDiscount, ProductDiscountApi } from '../../../core/models/product.model';
+import { AppliesTo, ProductDiscount } from '../../../core/models/product.model';
 import { ProductDiscountService } from '../../../core/services/product-discount.service';
 import { HeroIconComponent } from '../../../shared/icons/hero-icon.component';
 
@@ -102,9 +102,9 @@ export class AdminDiscountsComponent {
     }
 
     if (this.editingId) {
-      this.discountService.update(this.editingId, payload as Partial<ProductDiscountApi>);
+      this.discountService.update(this.editingId, payload as Partial<ProductDiscount>);
     } else {
-      this.discountService.add(payload as Omit<ProductDiscountApi, 'id'>);
+      this.discountService.add(payload as Omit<ProductDiscount, 'id'>);
     }
     this.showForm = false;
   }

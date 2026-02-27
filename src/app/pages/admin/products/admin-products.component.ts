@@ -14,12 +14,12 @@ export class AdminProductsComponent {
   showForm = false;
   editingId: string | null = null;
   form = {
-    nameAr: '',
-    descriptionAr: '',
+    title: '',
+    description: '',
     price: 0,
-    imageUrl: '',
+    image_url: '',
     category_id: '' as string,
-    isActive: true,
+    is_active: true,
   };
 
   constructor(public productService: ProductService) {}
@@ -27,12 +27,12 @@ export class AdminProductsComponent {
   openAdd(): void {
     this.editingId = null;
     this.form = {
-      nameAr: '',
-      descriptionAr: '',
+      title: '',
+      description: '',
       price: 0,
-      imageUrl: '',
+      image_url: '',
       category_id: '',
-      isActive: true,
+      is_active: true,
     };
     this.showForm = true;
   }
@@ -40,29 +40,29 @@ export class AdminProductsComponent {
   openEdit(p: Product): void {
     this.editingId = p.id;
     this.form = {
-      nameAr: p.nameAr,
-      descriptionAr: p.descriptionAr ?? '',
+      title: p.title,
+      description: p.description ?? '',
       price: p.price,
-      imageUrl: p.imageUrl,
+      image_url: p.image_url ?? '',
       category_id: p.category_id ?? '',
-      isActive: p.isActive,
+      is_active: p.is_active,
     };
     this.showForm = true;
   }
 
   save(): void {
-    const name = (this.form.nameAr || '').trim();
-    if (!name || this.form.price <= 0) return;
-    const description = (this.form.descriptionAr || '').trim();
-    const image = (this.form.imageUrl || '').trim();
+    const title = (this.form.title || '').trim();
+    if (!title || this.form.price <= 0) return;
+    const description = (this.form.description || '').trim();
+    const image = (this.form.image_url || '').trim();
     const category = (this.form.category_id || '').trim();
     const payload = {
-      nameAr: name,
-      descriptionAr: description || undefined,
+      title,
+      description: description || null,
       price: this.form.price,
-      imageUrl: image,
-      category_id: category || undefined,
-      isActive: this.form.isActive,
+      image_url: image || null,
+      category_id: category || null,
+      is_active: this.form.is_active,
     };
     if (this.editingId) {
       this.productService.update(this.editingId, payload);

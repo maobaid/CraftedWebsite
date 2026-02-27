@@ -141,7 +141,7 @@
           <div class="space-y-2 border-b border-primary/10 pb-4">
             @for (item of cartItems(); track item.product.id) {
               <div class="flex justify-between text-sm">
-                <span>{{ item.product.nameAr }} × {{ item.quantity }}</span>
+                <span>{{ item.product.title }} × {{ item.quantity }}</span>
                 <span>{{ (getPriceInfo(item).price * item.quantity).toFixed(2) }} د.ك</span>
               </div>
             }

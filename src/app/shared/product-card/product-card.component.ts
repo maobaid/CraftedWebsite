@@ -19,7 +19,9 @@ export class ProductCardComponent {
   effectivePrice = computed(() => {
     const p = this.product();
     this.discountService.discounts();
-    return p ? this.discountService.getEffectivePrice(p) : { price: 0, originalPrice: 0, discount: null };
+    return p
+      ? this.discountService.getEffectivePrice(p)
+      : { price: 0, originalPrice: 0, discount: null };
   });
 
   addToCart(p: Product): void {

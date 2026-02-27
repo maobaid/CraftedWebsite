@@ -8,8 +8,8 @@
     class="flex h-full w-24 shrink-0 self-stretch overflow-hidden bg-soft/40 md:h-40 md:w-full md:aspect-square"
   >
     <img
-      [src]="p.imageUrl || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
-      [alt]="p.nameAr"
+      [src]="p.image_url || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
+      [alt]="p.title"
       loading="lazy"
       class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
     />
@@ -21,7 +21,7 @@
       class="text-base font-semibold leading-snug text-primary md:text-lg hover:underline"
       [routerLink]="['/product', p.id]"
     >
-      {{ p.nameAr }}
+      {{ p.title }}
     </h3>
     @let priceInfo = effectivePrice();
     <div class="flex flex-wrap items-center gap-1.5 text-sm md:gap-2">

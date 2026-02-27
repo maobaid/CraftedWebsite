@@ -19,14 +19,14 @@
           >
             <div class="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-soft">
               <img
-                [src]="item.product.imageUrl || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
-                [alt]="item.product.nameAr"
+                [src]="item.product.image_url || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
+                [alt]="item.product.title"
                 class="h-full w-full object-cover"
               />
             </div>
             <div class="min-w-0 flex-1">
               <h3 class="font-semibold text-primary">
-                {{ item.product.nameAr }}
+                {{ item.product.title }}
               </h3>
               <p class="text-sm text-primary/60">
                 {{ getPriceInfo(item).price }} د.ك للوحدة

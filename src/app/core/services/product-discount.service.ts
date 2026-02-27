@@ -3,7 +3,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   Product,
   ProductDiscount,
-  ProductDiscountApi,
   ProductPriceResult,
   AppliesTo,
 } from '../models/product.model';
@@ -13,7 +12,7 @@ const DEFAULT_STORE_ID = 'e0a4703a-e743-4b18-ae6a-4df83f768282';
 
 /** API response for GET /stores/{storeId}/product-discounts */
 interface ProductDiscountsListResponse {
-  data?: ProductDiscountApi[];
+  data?: ProductDiscount[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -24,7 +23,7 @@ export class ProductDiscountService {
 
   constructor(
     private http: HttpClient,
-    private auth: AuthService
+    private auth: AuthService,
   ) {
     this.refresh();
   }
@@ -50,9 +49,9 @@ export class ProductDiscountService {
       return;
     }
     this.http
-      .get<ProductDiscountApi[] | ProductDiscountsListResponse>(
+      .get<ProductDiscount[] | ProductDiscountsListResponse>(
         `/stores/${storeId}/product-discounts`,
-        this.getAuthHeaders()
+        this.getAuthHeaders(),
       )
       .subscribe({
         next: (res) => {
@@ -71,14 +70,14 @@ export class ProductDiscountService {
    * Get the effective price for a product (after applying the best applicable discount).
    * Uses discounts that are valid for today and apply to this product; picks highest percentage.
    */
-  add(discount: Omit<ProductDiscountApi, 'id'>): void {
+  add(discount: Omit<ProductDiscount, 'id'>): void {
     const storeId = this.getStoreId();
     if (!storeId) return;
     this.http
-      .post<ProductDiscountApi>(
+      .post<ProductDiscount>(
         `/stores/${storeId}/product-discounts`,
         toApiBody(discount),
-        this.getAuthHeaders()
+        this.getAuthHeaders(),
       )
       .subscribe({
         next: () => this.refresh(),
@@ -86,14 +85,14 @@ export class ProductDiscountService {
       });
   }
 
-  update(id: string, discount: Partial<ProductDiscountApi>): void {
+  update(id: string, discount: Partial<ProductDiscount>): void {
     const storeId = this.getStoreId();
     if (!storeId) return;
     this.http
-      .patch<ProductDiscountApi>(
+      .patch<ProductDiscount>(
         `/stores/${storeId}/product-discounts/${id}`,
-        toApiBody(discount as ProductDiscountApi),
-        this.getAuthHeaders()
+        toApiBody(discount),
+        this.getAuthHeaders(),
       )
       .subscribe({
         next: () => this.refresh(),
@@ -105,7 +104,10 @@ export class ProductDiscountService {
     const storeId = this.getStoreId();
     if (!storeId) return;
     this.http
-      .delete<void>(`/stores/${storeId}/product-discounts/${id}`, this.getAuthHeaders())
+      .delete<void>(
+        `/stores/${storeId}/product-discounts/${id}`,
+        this.getAuthHeaders(),
+      )
       .subscribe({
         next: () => this.refresh(),
         error: () => {},
@@ -113,8 +115,7 @@ export class ProductDiscountService {
   }
 
   getEffectivePrice(product: Product): ProductPriceResult {
-    const originalPrice =
-      typeof product?.price === 'number' && !Number.isNaN(product.price) ? product.price : 0;
+    const originalPrice = product.price;
     const now = new Date();
     const list = this.discountsSignal();
 
@@ -129,7 +130,9 @@ export class ProductDiscountService {
         case 'CATEGORY':
           return !!d.category_id && d.category_id === product.category_id;
         case 'SPECIFIC_PRODUCTS':
-          return Array.isArray(d.product_ids) && d.product_ids.includes(product.id);
+          return (
+            Array.isArray(d.product_ids) && d.product_ids.includes(product.id)
+          );
         default:
           return false;
       }
@@ -139,7 +142,9 @@ export class ProductDiscountService {
       return { price: originalPrice, originalPrice, discount: null };
     }
 
-    const best = applicable.reduce((a, b) => (b.percentage > a.percentage ? b : a));
+    const best = applicable.reduce((a, b) =>
+      b.percentage > a.percentage ? b : a,
+    );
     const price = originalPrice * (1 - best.percentage / 100);
     return {
       price: Math.max(0, Math.round(price * 100) / 100),
@@ -149,7 +154,7 @@ export class ProductDiscountService {
   }
 }
 
-function apiToDiscount(api: ProductDiscountApi): ProductDiscount {
+function apiToDiscount(api: ProductDiscount): ProductDiscount {
   return {
     id: api.id,
     name: api.name,
@@ -163,7 +168,7 @@ function apiToDiscount(api: ProductDiscountApi): ProductDiscount {
   };
 }
 
-function toApiBody(d: Partial<ProductDiscountApi>): Record<string, unknown> {
+function toApiBody(d: Partial<ProductDiscount>): Record<string, unknown> {
   const body: Record<string, unknown> = {};
   if (d.name !== undefined) body['name'] = d.name;
   if (d.percentage !== undefined) {

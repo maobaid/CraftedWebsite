@@ -14,7 +14,7 @@
   <div class="overflow-x-auto">
     <table class="w-full border-collapse text-right">
       <thead>
-        <tr class="bg-soft">
+        <tr class="bg-primary text-white">
           <th class="p-3 font-semibold">الاسم</th>
           <th class="p-3 font-semibold">الهاتف</th>
           <th class="p-3 font-semibold">البريد</th>
@@ -29,21 +29,54 @@
             @if (editingId === c.id) {
               <td colspan="6" class="bg-soft p-4">
                 <div class="flex flex-wrap items-end gap-3">
-                  <input type="text" [(ngModel)]="editForm.fullName" placeholder="الاسم" class="rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
-                  <input type="email" [(ngModel)]="editForm.email" placeholder="البريد" class="rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
-                  <textarea [(ngModel)]="editForm.address" placeholder="العنوان" rows="2" class="min-w-[200px] rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"></textarea>
-                  <button type="button" class="rounded-xl bg-primary px-4 py-2 font-medium text-white" (click)="saveEdit()">حفظ</button>
-                  <button type="button" class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft" (click)="cancelEdit()">إلغاء</button>
+                  <input
+                    type="text"
+                    [(ngModel)]="editForm.fullName"
+                    placeholder="الاسم"
+                    class="rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+                  />
+                  <input
+                    type="email"
+                    [(ngModel)]="editForm.email"
+                    placeholder="البريد"
+                    class="rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+                  />
+                  <textarea
+                    [(ngModel)]="editForm.address"
+                    placeholder="العنوان"
+                    rows="2"
+                    class="min-w-[200px] rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+                  ></textarea>
+                  <button
+                    type="button"
+                    class="rounded-xl bg-primary px-4 py-2 font-medium text-white"
+                    (click)="saveEdit()"
+                  >
+                    حفظ
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft"
+                    (click)="cancelEdit()"
+                  >
+                    إلغاء
+                  </button>
                 </div>
               </td>
             } @else {
               <td class="p-3">{{ c.fullName }}</td>
               <td class="p-3">{{ c.phone }}</td>
-              <td class="p-3">{{ c.email || '—' }}</td>
-              <td class="p-3">{{ c.address || '—' }}</td>
+              <td class="p-3">{{ c.email || "—" }}</td>
+              <td class="p-3">{{ c.address || "—" }}</td>
               <td class="p-3">{{ getOrdersForCustomer(c) }}</td>
               <td class="p-3">
-                <button type="button" class="rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft" (click)="openEdit(c)">تعديل</button>
+                <button
+                  type="button"
+                  class="rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft"
+                  (click)="openEdit(c)"
+                >
+                  تعديل
+                </button>
               </td>
             }
           </tr>
@@ -54,5 +87,7 @@
 </div>
 
 @if (filteredCustomers.length === 0) {
-  <p class="py-12 text-center text-primary/60">لا يوجد عملاء أو لا توجد نتائج للبحث.</p>
+  <p class="py-12 text-center text-primary/60">
+    لا يوجد عملاء أو لا توجد نتائج للبحث.
+  </p>
 }
