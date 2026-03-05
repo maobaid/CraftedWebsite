@@ -51,15 +51,18 @@
         />
       </div>
       <div class="sm:col-span-2">
-        <label class="mb-1 block text-sm font-medium"
-          >معرف التصنيف (category_id)</label
-        >
-        <input
-          type="text"
+        <label class="mb-1 block text-sm font-medium">التصنيف (اختياري)</label>
+        <select
           [(ngModel)]="form.category_id"
-          placeholder="3fa85f64-5717-4562-b3fc-2c963f66afa6"
           class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
-        />
+        >
+          <option [ngValue]="null">— لا يوجد —</option>
+          @for (cat of categoryService.categories(); track cat.slug) {
+            @if (cat.id) {
+              <option [ngValue]="cat.id">{{ cat.name }}</option>
+            }
+          }
+        </select>
       </div>
       <div class="flex items-center">
         <label class="flex cursor-pointer items-center gap-2">
@@ -68,7 +71,7 @@
         </label>
       </div>
     </div>
-    <div class="mt-6 flex gap-3">
+    <div class="mt-6 flex justify-end gap-3">
       <button
         type="button"
         class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft"
@@ -78,7 +81,7 @@
       </button>
       <button
         type="button"
-        class="rounded-xl bg-primary px-4 py-2 font-medium text-white"
+        class="rounded-xl bg-accent px-4 py-2 font-medium text-white"
         (click)="save()"
       >
         حفظ

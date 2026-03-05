@@ -1,10 +1,10 @@
 {
   "/auth": {
-    "target": "http://localhost:3000",
+    "target": "https://ecomm-backend-wiyo.onrender.com",
     "secure": false
   },
   "/stores": {
-    "target": "http://localhost:3000",
+    "target": "https://ecomm-backend-wiyo.onrender.com",
     "secure": false
   }
 }

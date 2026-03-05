@@ -1,0 +1,238 @@
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+  <h1 class="text-2xl font-semibold text-primary">إدارة التصنيفات</h1>
+  <button
+    type="button"
+    class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
+    (click)="openAdd()"
+  >
+    <app-hero-icon name="plus" size="20"></app-hero-icon>
+    إضافة تصنيف
+  </button>
+</div>
+
+@if (showForm) {
+  <div class="mb-6 rounded-2xl bg-white p-6 shadow-lg">
+    <h2 class="mb-4 text-lg font-semibold">
+      {{ editingId ? "تعديل تصنيف" : "إضافة تصنيف" }}
+    </h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div>
+        <label class="mb-1 block text-sm font-medium">الاسم *</label>
+        <input
+          type="text"
+          [(ngModel)]="form.name"
+          (ngModelChange)="onNameChange()"
+          maxlength="200"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+          placeholder="مثال: المشروبات"
+        />
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">الرابط (slug) *</label>
+        <input
+          type="text"
+          [(ngModel)]="form.slug"
+          maxlength="100"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+          placeholder="مثال: beverages"
+        />
+        <p class="mt-1 text-xs text-primary/60">
+          حروف إنجليزية صغيرة، أرقام وشرطات فقط (مثل: my-category)
+        </p>
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium"
+          >التصنيف الأب (اختياري)</label
+        >
+        <select
+          [(ngModel)]="form.parent_id"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+        >
+          <option [ngValue]="null">— لا يوجد —</option>
+          @for (cat of categoryService.categories(); track cat.slug) {
+            @if (cat.id && cat.id !== editingId) {
+              <option [ngValue]="cat.id">{{ cat.name }}</option>
+            }
+          }
+        </select>
+      </div>
+      <div class="flex items-center">
+        <label class="flex cursor-pointer items-center gap-2">
+          <input type="checkbox" [(ngModel)]="form.is_active" class="rounded" />
+          مفعّل
+        </label>
+      </div>
+    </div>
+    <div class="mt-6 flex gap-3">
+      <button
+        type="button"
+        class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft"
+        (click)="showForm = false"
+      >
+        إلغاء
+      </button>
+      <button
+        type="button"
+        class="rounded-xl bg-primary px-4 py-2 font-medium text-white"
+        (click)="save()"
+      >
+        حفظ
+      </button>
+    </div>
+  </div>
+}
+
+<div class="space-y-4">
+  @if (categoryService.categories().length === 0) {
+    <div class="rounded-2xl bg-white p-12 text-center shadow-lg">
+      <p class="text-primary/60">لا توجد تصنيفات. أضف تصنيفاً من الزر أعلاه.</p>
+    </div>
+  } @else {
+    @if (orphanCategories().length > 0) {
+      <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
+        <p class="mb-3 text-sm font-medium text-amber-800">
+          تصنيفات بدون تصنيف أب موجود في القائمة
+        </p>
+        <div class="flex flex-wrap gap-2">
+          @for (c of orphanCategories(); track c.slug) {
+            <div
+              class="flex items-center gap-2 rounded-xl bg-white px-4 py-2 shadow-sm"
+            >
+              <span class="font-medium text-primary">{{ c.name }}</span>
+              <span class="font-mono text-xs text-primary/60">{{
+                c.slug
+              }}</span>
+              @if (c.id) {
+                <button
+                  type="button"
+                  class="rounded-lg border border-primary/20 px-2 py-1 text-xs hover:bg-soft"
+                  (click)="openEdit(c)"
+                >
+                  تعديل
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg border border-red-600 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                  (click)="delete(c.id)"
+                >
+                  حذف
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="space-y-4">
+      @for (root of rootCategories(); track root.slug) {
+        <article class="overflow-hidden rounded-2xl bg-white shadow-lg">
+          <div
+            class="flex flex-wrap items-center justify-between gap-3 border-b border-primary/10 bg-gradient-to-l from-primary/5 to-transparent p-4"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"
+              >
+                <app-hero-icon name="document-text" size="22"></app-hero-icon>
+              </div>
+              <div>
+                <h3 class="font-semibold text-primary">{{ root.name }}</h3>
+                <p class="font-mono text-sm text-primary/60">{{ root.slug }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span
+                class="rounded-full px-3 py-1 text-xs font-medium"
+                [ngClass]="{
+                  'bg-green-100 text-green-700': root.is_active !== false,
+                  'bg-primary/10 text-primary/70': root.is_active === false,
+                }"
+              >
+                {{ root.is_active !== false ? "مفعّل" : "معطّل" }}
+              </span>
+              @if (root.id) {
+                <button
+                  type="button"
+                  class="rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft"
+                  (click)="openEdit(root)"
+                >
+                  تعديل
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg border border-red-600 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                  (click)="delete(root.id)"
+                >
+                  حذف
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (root.id && descendantsWithDepth(root.id, 1).length > 0) {
+            <div class="border-t border-primary/5 bg-soft/30">
+              <div class="border-r-2 border-primary/20 pr-4 pl-4">
+                @for (
+                  item of descendantsWithDepth(root.id, 1);
+                  track item.category.slug
+                ) {
+                  <div
+                    class="flex flex-wrap items-center justify-between gap-2 border-b border-primary/5 py-3 last:border-0"
+                    [class.pr-6]="item.depth === 1"
+                    [class.pr-12]="item.depth === 2"
+                    [class.pr-18]="item.depth === 3"
+                    [class.pr-24]="item.depth >= 4"
+                  >
+                    <div class="flex items-center gap-2">
+                      @for (_ of depthLevels(item.depth); track $index) {
+                        <span class="text-primary/40">↲</span>
+                      }
+                      <span class="font-medium text-primary">{{
+                        item.category.name
+                      }}</span>
+                      <span class="font-mono text-xs text-primary/50">{{
+                        item.category.slug
+                      }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="rounded-full px-2 py-0.5 text-xs"
+                        [ngClass]="{
+                          'bg-green-100 text-green-700':
+                            item.category.is_active !== false,
+                          'bg-primary/10 text-primary/60':
+                            item.category.is_active === false,
+                        }"
+                      >
+                        {{
+                          item.category.is_active !== false ? "مفعّل" : "معطّل"
+                        }}
+                      </span>
+                      @if (item.category.id) {
+                        <button
+                          type="button"
+                          class="rounded-lg border border-primary/20 px-2 py-1 text-xs hover:bg-soft"
+                          (click)="openEdit(item.category)"
+                        >
+                          تعديل
+                        </button>
+                        <button
+                          type="button"
+                          class="rounded-lg border border-red-600 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                          (click)="delete(item.category.id)"
+                        >
+                          حذف
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</div>

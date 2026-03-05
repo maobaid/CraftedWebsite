@@ -24,6 +24,7 @@ export const routes: Routes = [
         children: [
           { path: '', loadComponent: () => import('./pages/admin/dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent) },
           { path: 'products', loadComponent: () => import('./pages/admin/products/admin-products.component').then((m) => m.AdminProductsComponent) },
+          { path: 'categories', loadComponent: () => import('./pages/admin/categories/admin-categories/admin-categories.component').then((m) => m.AdminCategoriesComponent) },
           { path: 'discounts', loadComponent: () => import('./pages/admin/discounts/admin-discounts.component').then((m) => m.AdminDiscountsComponent) },
           { path: 'coupons', loadComponent: () => import('./pages/admin/coupons/admin-coupons.component').then((m) => m.AdminCouponsComponent) },
           { path: 'orders', loadComponent: () => import('./pages/admin/orders/admin-orders.component').then((m) => m.AdminOrdersComponent) },
