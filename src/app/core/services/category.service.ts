@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Category } from '../models/category.model';
 import { AuthService } from './auth.service';
 
-const DEFAULT_STORE_ID = 'e0a4703a-e743-4b18-ae6a-4df83f768282';
+const DEFAULT_STORE_ID = 'e2de7aa8-72ce-45e5-a9c2-9e6613101f82';
 
 interface CategoriesListResponse {
   data?: Category[];
@@ -43,10 +43,9 @@ export class CategoryService {
       return;
     }
     this.http
-      .get<Category[] | CategoriesListResponse>(
-        `/stores/${storeId}/categories`,
-        this.getAuthHeaders(),
-      )
+      .get<
+        Category[] | CategoriesListResponse
+      >(`/stores/${storeId}/categories`, this.getAuthHeaders())
       .subscribe({
         next: (res) => {
           const list = Array.isArray(res)

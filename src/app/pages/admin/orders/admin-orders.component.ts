@@ -19,7 +19,9 @@ export class AdminOrdersComponent {
     return all.filter((o) => o.status === filter);
   });
 
-  constructor(public orderService: OrderService) {}
+  constructor(public orderService: OrderService) {
+    this.orderService.refreshOrders();
+  }
 
   getProductPrice = getProductPrice;
 

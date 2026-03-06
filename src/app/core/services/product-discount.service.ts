@@ -8,7 +8,7 @@ import {
 } from '../models/product.model';
 import { AuthService } from './auth.service';
 
-const DEFAULT_STORE_ID = 'e0a4703a-e743-4b18-ae6a-4df83f768282';
+const DEFAULT_STORE_ID = 'e2de7aa8-72ce-45e5-a9c2-9e6613101f82';
 
 /** API response for GET /stores/{storeId}/product-discounts */
 interface ProductDiscountsListResponse {
@@ -49,10 +49,9 @@ export class ProductDiscountService {
       return;
     }
     this.http
-      .get<ProductDiscount[] | ProductDiscountsListResponse>(
-        `/stores/${storeId}/product-discounts`,
-        this.getAuthHeaders(),
-      )
+      .get<
+        ProductDiscount[] | ProductDiscountsListResponse
+      >(`/stores/${storeId}/product-discounts`)
       .subscribe({
         next: (res) => {
           const list = Array.isArray(res)

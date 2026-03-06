@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Product } from '../models/product.model';
 import { AuthService } from './auth.service';
 
-const DEFAULT_STORE_ID = 'e0a4703a-e743-4b18-ae6a-4df83f768282';
+const DEFAULT_STORE_ID = 'e2de7aa8-72ce-45e5-a9c2-9e6613101f82';
 
 /** API response for GET /stores/{storeId}/products */
 interface ProductsListResponse {
@@ -23,7 +23,7 @@ export class ProductService {
 
   constructor(
     private http: HttpClient,
-    private auth: AuthService
+    private auth: AuthService,
   ) {
     this.refresh();
   }
@@ -53,7 +53,12 @@ export class ProductService {
       this.productsSignal.set([]);
       return;
     }
-    this.http.get<ProductsListResponse>(`/stores/${storeId}/products`, this.getAuthHeaders()).subscribe({
+    this.http
+      .get<ProductsListResponse>(
+        `/stores/${storeId}/products`,
+        this.getAuthHeaders(),
+      )
+      .subscribe({
         next: (res) => {
           const list = Array.isArray(res?.data) ? res.data : [];
           this.productsSignal.set(list);
@@ -78,7 +83,9 @@ export class ProductService {
           if (!product) return;
           const exists = this.productsSignal().some((p) => p.id === product.id);
           const list = exists
-            ? this.productsSignal().map((p) => (p.id === product.id ? product : p))
+            ? this.productsSignal().map((p) =>
+                p.id === product.id ? product : p,
+              )
             : [...this.productsSignal(), product];
           this.productsSignal.set(list);
         },
@@ -89,7 +96,11 @@ export class ProductService {
     const storeId = this.getStoreId();
     if (!storeId) return;
     this.http
-      .post<Product>(`/stores/${storeId}/products`, product, this.getAuthHeaders(true))
+      .post<Product>(
+        `/stores/${storeId}/products`,
+        product,
+        this.getAuthHeaders(true),
+      )
       .subscribe({
         next: (created) => {
           if (!created) return;
@@ -106,12 +117,16 @@ export class ProductService {
     if (!current) return;
     const merged: Product = { ...current, ...updates };
     this.http
-      .post<Product>(`/stores/${storeId}/products/${id}`, merged, this.getAuthHeaders(true))
+      .post<Product>(
+        `/stores/${storeId}/products/${id}`,
+        merged,
+        this.getAuthHeaders(true),
+      )
       .subscribe({
         next: (updated) => {
           if (!updated) return;
           const list = this.productsSignal().map((p) =>
-            p.id === id ? updated : p
+            p.id === id ? updated : p,
           );
           this.productsSignal.set(list);
         },
@@ -124,7 +139,7 @@ export class ProductService {
     this.http
       .delete<void>(
         `/stores/${storeId}/products/${id}`,
-        this.getAuthHeaders(true)
+        this.getAuthHeaders(true),
       )
       .subscribe({
         next: () => {

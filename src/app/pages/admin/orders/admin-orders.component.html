@@ -32,6 +32,10 @@
           <p><strong>العنوان:</strong> {{ order.customer.address }}</p>
         }
         <p><strong>موعد التوصيل:</strong> {{ order.deliveryMessage || '—' }}</p>
+        @if (order.discountCode) {
+          <p><strong>كود الخصم:</strong> {{ order.discountCode }}@if (order.discountAmount != null && order.discountAmount !== undefined) { ({{ order.discountAmount.toFixed(2) }} د.ك) }</p>
+        }
+        <p><strong>المجموع الفرعي:</strong> {{ order.subtotal.toFixed(2) }} د.ك</p>
         <p><strong>الإجمالي:</strong> {{ order.total.toFixed(2) }} د.ك</p>
         <div class="mt-2 flex flex-wrap gap-2">
           @for (item of order.items; track item.product.id) {

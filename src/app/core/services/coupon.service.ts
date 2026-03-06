@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Coupon, CouponType } from '../models/discount.model';
 import { AuthService } from './auth.service';
 
-const DEFAULT_STORE_ID = 'e0a4703a-e743-4b18-ae6a-4df83f768282';
+const DEFAULT_STORE_ID = 'e2de7aa8-72ce-45e5-a9c2-9e6613101f82';
 
 /** API response for GET /stores/{storeId}/coupons */
 interface CouponsListResponse {
@@ -44,10 +44,9 @@ export class CouponService {
       return;
     }
     this.http
-      .get<Coupon[] | CouponsListResponse>(
-        `/stores/${storeId}/coupons`,
-        this.getAuthHeaders(),
-      )
+      .get<
+        Coupon[] | CouponsListResponse
+      >(`/stores/${storeId}/coupons`, this.getAuthHeaders())
       .subscribe({
         next: (res) => {
           const list = Array.isArray(res)
@@ -111,9 +110,12 @@ export class CouponService {
 function normalizeCoupon(c: Coupon): Coupon {
   return {
     code: c.code ?? '',
-    type: (c.type === 'PERCENTAGE' || c.type === 'FIXED' ? c.type : 'PERCENTAGE') as CouponType,
+    type: (c.type === 'PERCENTAGE' || c.type === 'FIXED'
+      ? c.type
+      : 'PERCENTAGE') as CouponType,
     value: Number(c.value) || 0,
-    minimum_order_amount: c.minimum_order_amount != null ? Number(c.minimum_order_amount) : null,
+    minimum_order_amount:
+      c.minimum_order_amount != null ? Number(c.minimum_order_amount) : null,
     expires_at: c.expires_at ?? '',
     usage_limit: c.usage_limit != null ? Number(c.usage_limit) : null,
     is_active: c.is_active !== false,
