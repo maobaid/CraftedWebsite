@@ -10,6 +10,14 @@
   />
 </div>
 
+@if (loadError()) {
+  <p class="mb-4 text-red-600">{{ loadError() }}</p>
+  <button type="button" class="rounded-xl bg-primary px-4 py-2 text-white" (click)="loadCustomers()">إعادة المحاولة</button>
+}
+
+@if (loading()) {
+  <p class="py-12 text-center text-primary/60">جاري التحميل...</p>
+} @else {
 <div class="overflow-hidden rounded-2xl bg-white shadow-lg">
   <div class="overflow-x-auto">
     <table class="w-full border-collapse text-right">
@@ -24,7 +32,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (c of filteredCustomers; track c.id) {
+        @for (c of filteredCustomers(); track c.id) {
           <tr class="border-b border-primary/10">
             @if (editingId === c.id) {
               <td colspan="6" class="bg-soft p-4">
@@ -49,10 +57,11 @@
                   ></textarea>
                   <button
                     type="button"
-                    class="rounded-xl bg-primary px-4 py-2 font-medium text-white"
+                    class="rounded-xl bg-primary px-4 py-2 font-medium text-white disabled:opacity-50"
                     (click)="saveEdit()"
+                    [disabled]="saving()"
                   >
-                    حفظ
+                    {{ saving() ? 'جاري الحفظ...' : 'حفظ' }}
                   </button>
                   <button
                     type="button"
@@ -86,8 +95,9 @@
   </div>
 </div>
 
-@if (filteredCustomers.length === 0) {
+@if (filteredCustomers().length === 0) {
   <p class="py-12 text-center text-primary/60">
     لا يوجد عملاء أو لا توجد نتائج للبحث.
   </p>
+}
 }

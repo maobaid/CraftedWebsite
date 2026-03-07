@@ -28,6 +28,8 @@ export interface Order {
   deliveryMessage?: string;
   discountCode?: string;
   discountAmount?: number;
+  /** Total product-level discount (from API total_product_discount_amount). */
+  productDiscountAmount?: number;
   paymentStatus?: 'pending' | 'paid';
   createdAt: string;
   updatedAt?: string;
@@ -52,6 +54,8 @@ export interface CreateOrderDto {
 export interface OrderItemResponse {
   product_id: string;
   quantity: number;
+  unit_price?: string | number;
+  product_discount_applied?: string | number;
   product_title?: string;
   product_price?: number;
 }
@@ -59,14 +63,19 @@ export interface OrderItemResponse {
 /** Order as returned by API (GET /stores/:storeId/orders). */
 export interface OrderResponse {
   id: string;
+  store_id?: string;
   customer_id?: string;
   address_id?: string;
+  coupon_id?: string | null;
+  total_amount?: string | number;
+  total_product_discount_amount?: string | number;
+  total_coupon_discount_amount?: string | number;
   customer?: { id?: string; full_name?: string; phone?: string; email?: string; address?: string };
   address?: string | { id?: string; line?: string; city?: string; [key: string]: unknown };
   items: OrderItemResponse[];
   coupon_code?: string;
-  scheduled_delivery?: string;
-  status?: OrderStatus;
+  scheduled_delivery?: string | null;
+  status?: string;
   subtotal?: number;
   total?: number;
   discount_amount?: number;

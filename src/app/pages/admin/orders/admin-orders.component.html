@@ -32,8 +32,11 @@
           <p><strong>العنوان:</strong> {{ order.customer.address }}</p>
         }
         <p><strong>موعد التوصيل:</strong> {{ order.deliveryMessage || '—' }}</p>
-        @if (order.discountCode) {
-          <p><strong>كود الخصم:</strong> {{ order.discountCode }}@if (order.discountAmount != null && order.discountAmount !== undefined) { ({{ order.discountAmount.toFixed(2) }} د.ك) }</p>
+        @if (order.productDiscountAmount != null && order.productDiscountAmount > 0) {
+          <p><strong>خصم المنتجات:</strong> {{ order.productDiscountAmount.toFixed(2) }} د.ك</p>
+        }
+        @if (order.discountCode || (order.discountAmount != null && order.discountAmount > 0)) {
+          <p><strong>كود الخصم:</strong> {{ order.discountCode || '—' }}@if (order.discountAmount != null && order.discountAmount > 0) { ({{ order.discountAmount.toFixed(2) }} د.ك) }</p>
         }
         <p><strong>المجموع الفرعي:</strong> {{ order.subtotal.toFixed(2) }} د.ك</p>
         <p><strong>الإجمالي:</strong> {{ order.total.toFixed(2) }} د.ك</p>

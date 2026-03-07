@@ -1,5 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Product } from '../models/product.model';
 import { AuthService } from './auth.service';
 
@@ -71,6 +73,15 @@ export class ProductService {
 
   getById(id: string): Product | undefined {
     return this.productsSignal().find((p) => p.id === id);
+  }
+
+  /** Fetch product by id (for admin order list enrichment). */
+  getByIdApi(id: string): Observable<Product | null> {
+    const storeId = this.getStoreId();
+    if (!storeId) return of(null);
+    return this.http
+      .get<Product>(`/stores/${storeId}/products/${id}`, this.getAuthHeaders())
+      .pipe(catchError(() => of(null)));
   }
 
   loadById(id: string): void {

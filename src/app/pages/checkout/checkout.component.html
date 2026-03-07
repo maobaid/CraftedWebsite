@@ -92,7 +92,7 @@
 
       @if (step() === 2) {
         <div>
-          <h2 class="mb-4 text-lg font-semibold text-primary">معلومات العميل</h2>
+          <h2 class="mb-4 text-lg font-semibold text-primary">معلومات العميل والعنوان</h2>
           <form [formGroup]="customerForm" class="space-y-4">
             <div>
               <label for="fullName" class="mb-1 block font-medium">الاسم الكامل *</label>
@@ -102,11 +102,78 @@
               <label for="email" class="mb-1 block font-medium">البريد الإلكتروني (اختياري)</label>
               <input id="email" type="email" formControlName="email" placeholder="example@email.com" class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent" />
             </div>
-            <div>
-              <label for="address" class="mb-1 block font-medium">العنوان (إجباري للطلب الأول)</label>
-              <textarea id="address" formControlName="address" placeholder="العنوان الكامل للتوصيل" rows="3" class="w-full rounded-xl border border-primary/20 px-4 py-3 outline-none focus:ring-2 focus:ring-accent"></textarea>
-            </div>
           </form>
+
+          @if (existingCustomer() && addresses().length > 0 && !useNewAddress()) {
+            <div class="mt-6">
+              <p class="mb-2 font-medium">اختر عنوان التوصيل</p>
+              <div class="space-y-2">
+                @for (addr of addresses(); track addr.id) {
+                  <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-primary/20 p-3 transition-colors hover:bg-soft/50" [class.ring-2]="selectedAddressId() === addr.id" [class.ring-primary]="selectedAddressId() === addr.id">
+                    <input type="radio" [value]="addr.id" [checked]="selectedAddressId() === addr.id" (change)="selectedAddressId.set(addr.id)" name="address" class="mt-1" />
+                    <span class="text-sm">{{ formatAddressLine(addr) }}</span>
+                  </label>
+                }
+              </div>
+              <button type="button" class="mt-3 text-sm font-medium text-accent hover:underline" (click)="useNewAddress.set(true)">
+                + إضافة عنوان جديد
+              </button>
+            </div>
+          }
+
+          @if (useNewAddress() || !existingCustomer() || addresses().length === 0) {
+            <div class="mt-6 space-y-4" [formGroup]="addressForm">
+              <p class="font-medium">{{ existingCustomer() ? 'عنوان جديد' : 'العنوان *' }}</p>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label class="mb-1 block text-sm font-medium">التسمية *</label>
+                  <input formControlName="label" placeholder="مثال: المنزل" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium">الدولة *</label>
+                  <input formControlName="country" placeholder="KW" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium">المدينة *</label>
+                  <input formControlName="city" placeholder="مدينة الكويت" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium">المحافظة *</label>
+                  <input formControlName="state" placeholder="مثال: حولي" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium">القطعة *</label>
+                  <input formControlName="block" placeholder="مثال: 1" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium">الشارع *</label>
+                  <input formControlName="street" placeholder="الشارع" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium">الجادة (اختياري)</label>
+                  <input formControlName="avenue" placeholder="مثال: 5" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium">رقم المبنى *</label>
+                  <input formControlName="building_number" placeholder="مثال: 42" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+                </div>
+                <div>
+                  <label class="mb-1 block text-sm font-medium">رقم الشقة (اختياري)</label>
+                  <input formControlName="apartment_number" placeholder="مثال: 1" class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent" />
+                </div>
+              </div>
+              <label class="flex cursor-pointer items-center gap-2">
+                <input type="checkbox" formControlName="is_default" class="rounded" />
+                استخدام كعنوان افتراضي
+              </label>
+            </div>
+          }
+
+          @if (existingCustomer() && addresses().length > 0 && useNewAddress()) {
+            <button type="button" class="mt-3 text-sm font-medium text-primary/70 hover:underline" (click)="useNewAddress.set(false); selectedAddressId.set(addresses()[0].id)">
+              استخدام عنوان محفوظ
+            </button>
+          }
         </div>
       }
 
