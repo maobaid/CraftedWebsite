@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { Product } from '../../../core/models/product.model';
@@ -14,6 +15,10 @@ import { HeroIconComponent } from '../../../shared/icons/hero-icon.component';
 export class AdminProductsComponent {
   showForm = false;
   editingId: string | null = null;
+  selectedProductIds = new Set<string>();
+  search = '';
+  statusFilter: 'all' | 'active' | 'inactive' = 'all';
+  categoryFilter: string | 'all' = 'all';
   form = {
     title: '',
     description: '',
@@ -26,7 +31,77 @@ export class AdminProductsComponent {
   constructor(
     public productService: ProductService,
     public categoryService: CategoryService,
+    private router: Router,
   ) {}
+
+  getCategoryName(categoryId: string | null): string {
+    if (!categoryId) return '—';
+    const cat = this.categoryService
+      .categories()
+      .find((c) => c.id === categoryId);
+    return cat?.name ?? '—';
+  }
+
+  isSelected(id: string): boolean {
+    return this.selectedProductIds.has(id);
+  }
+
+  toggleProductSelection(id: string, checked: boolean): void {
+    if (checked) {
+      this.selectedProductIds.add(id);
+    } else {
+      this.selectedProductIds.delete(id);
+    }
+  }
+
+  hasSelection(): boolean {
+    return this.selectedProductIds.size > 0;
+  }
+
+  get allVisibleSelected(): boolean {
+    const visible = this.filteredProducts;
+    if (!visible.length) return false;
+    return visible.every((p) => this.selectedProductIds.has(p.id));
+  }
+
+  toggleSelectAllVisible(checked: boolean): void {
+    const visible = this.filteredProducts;
+    if (checked) {
+      visible.forEach((p) => this.selectedProductIds.add(p.id));
+    } else {
+      visible.forEach((p) => this.selectedProductIds.delete(p.id));
+    }
+  }
+
+  addDiscountForSelected(): void {
+    if (!this.selectedProductIds.size) return;
+    const ids = Array.from(this.selectedProductIds);
+    this.router.navigate(['/admin/discounts'], {
+      queryParams: {
+        appliesTo: 'SPECIFIC_PRODUCTS',
+        productIds: ids.join(','),
+      },
+    });
+  }
+
+  get filteredProducts(): Product[] {
+    const q = this.search.trim().toLowerCase();
+    const status = this.statusFilter;
+    const categoryId = this.categoryFilter;
+    return this.productService
+      .allProducts()
+      .filter((p) => {
+        if (q) {
+          const inTitle = p.title.toLowerCase().includes(q);
+          const inDesc = (p.description ?? '').toLowerCase().includes(q);
+          if (!inTitle && !inDesc) return false;
+        }
+        if (status === 'active' && !p.is_active) return false;
+        if (status === 'inactive' && p.is_active) return false;
+        if (categoryId !== 'all' && p.category_id !== categoryId) return false;
+        return true;
+      });
+  }
 
   openAdd(): void {
     this.editingId = null;

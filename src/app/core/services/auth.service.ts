@@ -88,6 +88,30 @@ export class AuthService {
     return sessionStorage.getItem(AUTH_TOKEN_KEY);
   }
 
+  /** Decode JWT payload (unverified) to read exp and other claims. */
+  private getTokenPayload(): Record<string, unknown> | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    try {
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const json = atob(base64);
+      return JSON.parse(json) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Check if the current access token is expired (uses JWT exp, with small leeway). */
+  isTokenExpired(leewaySeconds = 30): boolean {
+    const payload = this.getTokenPayload();
+    const exp = payload && typeof payload['exp'] === 'number' ? payload['exp'] : null;
+    if (!exp) return false;
+    const now = Math.floor(Date.now() / 1000);
+    return now >= exp - leewaySeconds;
+  }
+
   /** Used by the guard so auth is read from storage (avoids timing issues after login). */
   isLoggedIn(): boolean {
     return !!sessionStorage.getItem(AUTH_TOKEN_KEY);

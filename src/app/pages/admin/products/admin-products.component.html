@@ -1,13 +1,53 @@
-<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-  <h1 class="text-2xl font-semibold text-primary">إدارة المنتجات</h1>
-  <button
-    type="button"
-    class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
-    (click)="openAdd()"
-  >
-    <app-hero-icon name="plus" size="20" />
-    إضافة منتج
-  </button>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-6">
+  <div class="space-y-3">
+    <h1 class="text-2xl font-semibold text-primary">إدارة المنتجات</h1>
+    <div class="flex flex-wrap gap-3">
+      <input
+        type="text"
+        class="w-64 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+        placeholder="بحث بالاسم أو الوصف..."
+        [(ngModel)]="search"
+      />
+      <select
+        class="w-40 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+        [(ngModel)]="statusFilter"
+      >
+        <option value="all">كل الحالات</option>
+        <option value="active">مفعّل</option>
+        <option value="inactive">معطّل</option>
+      </select>
+      <select
+        class="w-52 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+        [(ngModel)]="categoryFilter"
+      >
+        <option value="all">كل التصنيفات</option>
+        @for (cat of categoryService.categories(); track cat.slug) {
+          @if (cat.id) {
+            <option [value]="cat.id">{{ cat.name }}</option>
+          }
+        }
+      </select>
+    </div>
+  </div>
+  <div class="flex flex-wrap gap-3">
+    <button
+      type="button"
+      class="flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 font-medium text-white disabled:opacity-40"
+      (click)="addDiscountForSelected()"
+      [disabled]="!hasSelection()"
+    >
+      <app-hero-icon name="ticket" size="18" />
+      إضافة خصم للمنتجات المحددة
+    </button>
+    <button
+      type="button"
+      class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
+      (click)="openAdd()"
+    >
+      <app-hero-icon name="plus" size="20" />
+      إضافة منتج
+    </button>
+  </div>
 </div>
 
 @if (showForm) {
@@ -95,16 +135,37 @@
     <table class="w-full border-collapse text-right">
       <thead>
         <tr class="bg-primary text-white">
+          <th class="p-3 font-semibold">
+            <input
+              type="checkbox"
+              [checked]="allVisibleSelected"
+              (change)="toggleSelectAllVisible($any($event.target).checked)"
+              class="h-4 w-4 rounded border-primary/30 accent-accent"
+            />
+          </th>
+          <!-- <th class="p-3 font-semibold">الرمز</th> -->
           <th class="p-3 font-semibold">الصورة</th>
           <th class="p-3 font-semibold">الاسم</th>
+          <th class="p-3 font-semibold">التصنيف</th>
           <th class="p-3 font-semibold">السعر</th>
           <th class="p-3 font-semibold">الحالة</th>
           <th class="p-3 font-semibold">إجراءات</th>
         </tr>
       </thead>
       <tbody>
-        @for (p of productService.allProducts(); track p.id) {
+        @for (p of filteredProducts; track p.id) {
           <tr class="border-b border-primary/10">
+            <td class="p-3">
+              <input
+                type="checkbox"
+                [checked]="isSelected(p.id)"
+                (change)="
+                  toggleProductSelection(p.id, $any($event.target).checked)
+                "
+                class="h-4 w-4 rounded border-primary/30 accent-accent"
+              />
+            </td>
+            <!-- <td class="p-3">{{ p.id }}</td> -->
             <td class="p-3">
               <img
                 [src]="
@@ -115,6 +176,7 @@
               />
             </td>
             <td class="p-3">{{ p.title }}</td>
+            <td class="p-3">{{ getCategoryName(p.category_id) }}</td>
             <td class="p-3">{{ p.price }} د.ك</td>
             <td class="p-3">{{ p.is_active ? "مفعّل" : "معطّل" }}</td>
             <td class="p-3">
@@ -132,6 +194,12 @@
               >
                 حذف
               </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="p-6 text-center text-primary/60">
+              لا توجد منتجات مطابقة للبحث أو التصفيات الحالية.
             </td>
           </tr>
         }

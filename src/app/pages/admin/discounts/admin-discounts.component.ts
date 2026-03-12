@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { AppliesTo, ProductDiscount } from '../../../core/models/product.model';
 import { ProductDiscountService } from '../../../core/services/product-discount.service';
 import { HeroIconComponent } from '../../../shared/icons/hero-icon.component';
@@ -17,7 +18,7 @@ const APPLIES_TO_OPTIONS: { value: AppliesTo; label: string }[] = [
   imports: [FormsModule, DatePipe, HeroIconComponent],
   templateUrl: './admin-discounts.component.html',
 })
-export class AdminDiscountsComponent {
+export class AdminDiscountsComponent implements OnInit {
   showForm = false;
   editingId: string | null = null;
   appliesToOptions = APPLIES_TO_OPTIONS;
@@ -32,7 +33,36 @@ export class AdminDiscountsComponent {
     product_ids_str: '',
   };
 
+  private route = inject(ActivatedRoute);
+
   constructor(public discountService: ProductDiscountService) {}
+
+  ngOnInit(): void {
+    this.route.queryParamMap.subscribe((params) => {
+      if (this.editingId || this.showForm) return;
+      const idsParam = params.get('productIds');
+      const appliesToParam = params.get('appliesTo') as AppliesTo | null;
+      if (!idsParam) return;
+      const ids = idsParam
+        .split(/[\s,]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (!ids.length) return;
+
+      const start = new Date();
+      const end = new Date();
+      end.setMonth(end.getMonth() + 1);
+
+      this.form = {
+        ...this.form,
+        applies_to: appliesToParam === 'SPECIFIC_PRODUCTS' ? 'SPECIFIC_PRODUCTS' : 'SPECIFIC_PRODUCTS',
+        product_ids_str: ids.join(', '),
+        start_date: this.form.start_date || start.toISOString().slice(0, 10),
+        end_date: this.form.end_date || end.toISOString().slice(0, 10),
+      };
+      this.showForm = true;
+    });
+  }
 
   openAdd(): void {
     this.editingId = null;

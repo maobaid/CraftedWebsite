@@ -1,19 +1,19 @@
 <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-  <h1 class="text-2xl font-semibold text-primary">إدارة التصنيفات</h1>
+  <h1 class="text-2xl font-semibold text-primary">إدارة الأقسام</h1>
   <button
     type="button"
     class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
     (click)="openAdd()"
   >
     <app-hero-icon name="plus" size="20"></app-hero-icon>
-    إضافة تصنيف
+    إضافة قسم
   </button>
 </div>
 
 @if (showForm) {
   <div class="mb-6 rounded-2xl bg-white p-6 shadow-lg">
     <h2 class="mb-4 text-lg font-semibold">
-      {{ editingId ? "تعديل تصنيف" : "إضافة تصنيف" }}
+      {{ editingId ? "تعديل قسم" : "إضافة قسم" }}
     </h2>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <div>
@@ -42,7 +42,7 @@
       </div>
       <div>
         <label class="mb-1 block text-sm font-medium"
-          >التصنيف الأب (اختياري)</label
+          >القسم الأب (اختياري)</label
         >
         <select
           [(ngModel)]="form.parent_id"
@@ -85,13 +85,13 @@
 <div class="space-y-4">
   @if (categoryService.categories().length === 0) {
     <div class="rounded-2xl bg-white p-12 text-center shadow-lg">
-      <p class="text-primary/60">لا توجد تصنيفات. أضف تصنيفاً من الزر أعلاه.</p>
+      <p class="text-primary/60">لا توجد أقسام. أضف قسماً من الزر أعلاه.</p>
     </div>
   } @else {
     @if (orphanCategories().length > 0) {
       <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
         <p class="mb-3 text-sm font-medium text-amber-800">
-          تصنيفات بدون تصنيف أب موجود في القائمة
+          أقسام بدون قسم أب موجود في القائمة
         </p>
         <div class="flex flex-wrap gap-2">
           @for (c of orphanCategories(); track c.slug) {

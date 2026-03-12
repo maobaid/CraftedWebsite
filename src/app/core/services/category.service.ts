@@ -3,8 +3,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Category } from '../models/category.model';
 import { AuthService } from './auth.service';
 
-const DEFAULT_STORE_ID = 'e2de7aa8-72ce-45e5-a9c2-9e6613101f82';
-
 interface CategoriesListResponse {
   data?: Category[];
 }
@@ -24,8 +22,7 @@ export class CategoryService {
 
   private getStoreId(): string | null {
     const user = this.auth.user();
-    if (user?.store_id) return user.store_id;
-    return DEFAULT_STORE_ID;
+    return user?.store_id ?? null;
   }
 
   private getAuthHeaders(): { headers?: HttpHeaders } {

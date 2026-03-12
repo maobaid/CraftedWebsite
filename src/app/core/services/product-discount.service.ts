@@ -8,8 +8,6 @@ import {
 } from '../models/product.model';
 import { AuthService } from './auth.service';
 
-const DEFAULT_STORE_ID = 'e2de7aa8-72ce-45e5-a9c2-9e6613101f82';
-
 /** API response for GET /stores/{storeId}/product-discounts */
 interface ProductDiscountsListResponse {
   data?: ProductDiscount[];
@@ -30,8 +28,7 @@ export class ProductDiscountService {
 
   private getStoreId(): string | null {
     const user = this.auth.user();
-    if (user?.store_id) return user.store_id;
-    return DEFAULT_STORE_ID;
+    return user?.store_id ?? null;
   }
 
   private getAuthHeaders(): { headers?: HttpHeaders } {
