@@ -197,11 +197,19 @@
             </td>
           </tr>
         } @empty {
-          <tr>
-            <td colspan="7" class="p-6 text-center text-primary/60">
-              لا توجد منتجات مطابقة للبحث أو التصفيات الحالية.
-            </td>
-          </tr>
+          @if (productService.allProducts().length === 0) {
+            <tr>
+              <td colspan="7" class="p-6 text-center text-primary/60">
+                لا توجد منتجات. أضف منتجاً من الزر أعلاه.
+              </td>
+            </tr>
+          } @else {
+            <tr>
+              <td colspan="7" class="p-6 text-center text-primary/60">
+                لا توجد منتجات مطابقة للبحث أو التصفيات الحالية.
+              </td>
+            </tr>
+          }
         }
       </tbody>
     </table>

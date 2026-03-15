@@ -30,7 +30,24 @@ export class AdminCouponsComponent {
     isActive: true,
   };
 
+  search = '';
+  statusFilter: 'all' | 'active' | 'inactive' = 'all';
+  typeFilter: 'all' | CouponType = 'all';
+
   constructor(public couponService: CouponService) {}
+
+  get filteredCoupons(): Coupon[] {
+    const q = this.search.trim().toLowerCase();
+    const status = this.statusFilter;
+    const type = this.typeFilter;
+    return this.couponService.coupons().filter((c) => {
+      if (q && !(c.code ?? '').toLowerCase().includes(q)) return false;
+      if (status === 'active' && c.is_active === false) return false;
+      if (status === 'inactive' && c.is_active !== false) return false;
+      if (type !== 'all' && c.type !== type) return false;
+      return true;
+    });
+  }
 
   openAdd(): void {
     this.editingCode = null;

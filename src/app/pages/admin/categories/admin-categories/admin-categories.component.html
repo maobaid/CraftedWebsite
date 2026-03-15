@@ -1,5 +1,23 @@
-<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-  <h1 class="text-2xl font-semibold text-primary">إدارة الأقسام</h1>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-6">
+  <div class="space-y-3">
+    <h1 class="text-2xl font-semibold text-primary">إدارة الأقسام</h1>
+    <div class="flex flex-wrap gap-3">
+      <input
+        type="text"
+        class="w-64 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+        placeholder="بحث بالاسم أو الرابط (slug)..."
+        [(ngModel)]="search"
+      />
+      <select
+        class="w-40 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+        [(ngModel)]="statusFilter"
+      >
+        <option value="all">كل الحالات</option>
+        <option value="active">مفعّل</option>
+        <option value="inactive">معطّل</option>
+      </select>
+    </div>
+  </div>
   <button
     type="button"
     class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
@@ -86,6 +104,100 @@
   @if (categoryService.categories().length === 0) {
     <div class="rounded-2xl bg-white p-12 text-center shadow-lg">
       <p class="text-primary/60">لا توجد أقسام. أضف قسماً من الزر أعلاه.</p>
+    </div>
+  } @else if (filteredCategories.length === 0) {
+    <div class="rounded-2xl bg-white p-12 text-center shadow-lg">
+      <p class="text-primary/60">
+        لا توجد أقسام مطابقة للبحث أو التصفيات الحالية.
+      </p>
+    </div>
+  } @else if (isSearchView) {
+    <div class="rounded-2xl bg-white shadow-lg overflow-hidden">
+      <div
+        class="border-b border-primary/10 bg-gradient-to-l from-primary/5 to-transparent px-4 py-3"
+      >
+        <p class="text-sm text-primary/70">نتائج البحث</p>
+      </div>
+      <div class="divide-y divide-primary/5">
+        @for (c of filteredCategories; track c.slug) {
+          <div class="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div class="flex flex-wrap items-center gap-2 min-w-0">
+              @if (parentCategory(c); as parent) {
+                <span class="font-medium text-primary/80">
+                  @for (
+                    seg of getHighlightedSegments(parent.name, search);
+                    track $index
+                  ) {
+                    @if (seg.highlight) {
+                      <mark class="bg-amber-200 text-primary rounded">{{
+                        seg.text
+                      }}</mark>
+                    } @else {
+                      {{ seg.text }}
+                    }
+                  }
+                </span>
+                <span class="text-primary/50">←</span>
+              }
+              <span class="font-semibold text-primary">
+                @for (
+                  seg of getHighlightedSegments(c.name, search);
+                  track $index
+                ) {
+                  @if (seg.highlight) {
+                    <mark class="bg-amber-200 text-primary rounded">{{
+                      seg.text
+                    }}</mark>
+                  } @else {
+                    {{ seg.text }}
+                  }
+                }
+              </span>
+              <span class="font-mono text-xs text-primary/60">
+                @for (
+                  seg of getHighlightedSegments(c.slug, search);
+                  track $index
+                ) {
+                  @if (seg.highlight) {
+                    <mark class="bg-amber-200 text-primary rounded">{{
+                      seg.text
+                    }}</mark>
+                  } @else {
+                    {{ seg.text }}
+                  }
+                }
+              </span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span
+                class="rounded-full px-2 py-0.5 text-xs"
+                [ngClass]="{
+                  'bg-green-100 text-green-700': c.is_active !== false,
+                  'bg-primary/10 text-primary/60': c.is_active === false,
+                }"
+              >
+                {{ c.is_active !== false ? "مفعّل" : "معطّل" }}
+              </span>
+              @if (c.id) {
+                <button
+                  type="button"
+                  class="rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft"
+                  (click)="openEdit(c)"
+                >
+                  تعديل
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg border border-red-600 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                  (click)="delete(c.id)"
+                >
+                  حذف
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
     </div>
   } @else {
     @if (orphanCategories().length > 0) {
