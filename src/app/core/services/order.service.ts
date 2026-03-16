@@ -2,7 +2,12 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, forkJoin } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
-import { Order, OrderStatus, OrderResponse, CreateOrderDto } from '../models/order.model';
+import {
+  Order,
+  OrderStatus,
+  OrderResponse,
+  CreateOrderDto,
+} from '../models/order.model';
 import { Customer } from '../models/customer.model';
 import { AuthService } from './auth.service';
 import { StoreCustomerService } from './store-customer.service';
@@ -82,17 +87,33 @@ export class OrderService {
         }),
         switchMap((list) => {
           const orders = list as OrderResponse[];
-          const customerIds = [...new Set(orders.map((o) => o.customer_id).filter(Boolean))] as string[];
-          const productIds = [...new Set(orders.flatMap((o) => (o.items ?? []).map((it) => it.product_id).filter(Boolean)))];
+          const customerIds = [
+            ...new Set(orders.map((o) => o.customer_id).filter(Boolean)),
+          ] as string[];
+          const productIds = [
+            ...new Set(
+              orders.flatMap((o) =>
+                (o.items ?? []).map((it) => it.product_id).filter(Boolean),
+              ),
+            ),
+          ];
           return forkJoin({
             customers: customerIds.length
-              ? forkJoin(customerIds.map((id) => this.storeCustomer.getCustomerById(id)))
+              ? forkJoin(
+                  customerIds.map((id) =>
+                    this.storeCustomer.getCustomerById(id),
+                  ),
+                )
               : of([]),
             addresses: customerIds.length
-              ? forkJoin(customerIds.map((id) => this.storeCustomer.getAddresses(id)))
+              ? forkJoin(
+                  customerIds.map((id) => this.storeCustomer.getAddresses(id)),
+                )
               : of([]),
             products: productIds.length
-              ? forkJoin(productIds.map((id) => this.productService.getByIdApi(id)))
+              ? forkJoin(
+                  productIds.map((id) => this.productService.getByIdApi(id)),
+                )
               : of([]),
           }).pipe(
             map(({ customers, addresses, products }) => {
@@ -100,26 +121,44 @@ export class OrderService {
               const addressMap = new Map<string, Address[]>();
               const productMap = new Map<string, Product | null>();
               customerIds.forEach((id, i) => customerMap.set(id, customers[i]));
-              customerIds.forEach((id, i) => addressMap.set(id, addresses[i] ?? []));
-              productIds.forEach((id, i) => productMap.set(id, products[i] ?? null));
+              customerIds.forEach((id, i) =>
+                addressMap.set(id, addresses[i] ?? []),
+              );
+              productIds.forEach((id, i) =>
+                productMap.set(id, products[i] ?? null),
+              );
               const enriched = orders.map((o) => {
-                const cust = o.customer_id ? customerMap.get(o.customer_id) : null;
-                const addrs = o.customer_id ? addressMap.get(o.customer_id) : [];
-                const addr = o.address_id && addrs?.length ? addrs.find((a) => a.id === o.address_id) : null;
+                const cust = o.customer_id
+                  ? customerMap.get(o.customer_id)
+                  : null;
+                const addrs = o.customer_id
+                  ? addressMap.get(o.customer_id)
+                  : [];
+                const addr =
+                  o.address_id && addrs?.length
+                    ? addrs.find((a) => a.id === o.address_id)
+                    : null;
                 const addressLine = addr ? formatAddressLine(addr) : undefined;
                 const customer = cust
                   ? {
                       full_name: cust.full_name,
-                      phone: (cust as { phone?: string }).phone ?? cust.phone_number,
+                      phone:
+                        (cust as { phone?: string }).phone ?? cust.phone_number,
                       email: cust.email,
                       address: addressLine,
                     }
                   : undefined;
                 const items = (o.items ?? []).map((it) => ({
                   ...it,
-                  product_title: productMap.get(it.product_id)?.title ?? it.product_title,
+                  product_title:
+                    productMap.get(it.product_id)?.title ?? it.product_title,
                 }));
-                return { ...o, customer, address: addressLine, items } as OrderResponse;
+                return {
+                  ...o,
+                  customer,
+                  address: addressLine,
+                  items,
+                } as OrderResponse;
               });
               return enriched.map(apiOrderToOrder);
             }),
@@ -150,7 +189,7 @@ export class OrderService {
     if (!storeId) return;
     this.http
       .patch(
-        `/stores/${storeId}/orders/${id}`,
+        `/stores/${storeId}/orders/${id}/status`,
         { status },
         this.getAuthHeaders(),
       )
@@ -222,12 +261,6 @@ function parseNum(v: string | number | undefined | null): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-function normalizeStatus(s: string | undefined): Order['status'] {
-  const lower = (s ?? 'pending').toLowerCase();
-  if (lower === 'pending' || lower === 'confirmed' || lower === 'shipped' || lower === 'delivered') return lower;
-  return 'pending';
-}
-
 function apiOrderToOrder(api: OrderResponse): Order {
   const addrLine =
     typeof api.address === 'string'
@@ -274,12 +307,14 @@ function apiOrderToOrder(api: OrderResponse): Order {
     items,
     subtotal,
     total,
-    status: normalizeStatus(api.status),
+    status: (api.status as OrderStatus) ?? 'PENDING',
     deliveryMessage: api.scheduled_delivery
       ? formatScheduledDelivery(api.scheduled_delivery)
       : undefined,
     discountCode: api.coupon_code,
-    discountAmount: parseNum(api.discount_amount ?? api.total_coupon_discount_amount),
+    discountAmount: parseNum(
+      api.discount_amount ?? api.total_coupon_discount_amount,
+    ),
     productDiscountAmount: parseNum(api.total_product_discount_amount),
     createdAt: created_at,
     updatedAt: updated_at,

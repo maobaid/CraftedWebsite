@@ -12,92 +12,141 @@
 
 @if (loadError()) {
   <p class="mb-4 text-red-600">{{ loadError() }}</p>
-  <button type="button" class="rounded-xl bg-primary px-4 py-2 text-white" (click)="loadCustomers()">إعادة المحاولة</button>
+  <button
+    type="button"
+    class="rounded-xl bg-primary px-4 py-2 text-white"
+    (click)="loadCustomers()"
+  >
+    إعادة المحاولة
+  </button>
 }
 
 @if (loading()) {
   <p class="py-12 text-center text-primary/60">جاري التحميل...</p>
 } @else {
-<div class="overflow-hidden rounded-2xl bg-white shadow-lg">
-  <div class="overflow-x-auto">
-    <table class="w-full border-collapse text-right">
-      <thead>
-        <tr class="bg-primary text-white">
-          <th class="p-3 font-semibold">الاسم</th>
-          <th class="p-3 font-semibold">الهاتف</th>
-          <th class="p-3 font-semibold">البريد</th>
-          <th class="p-3 font-semibold">العنوان</th>
-          <th class="p-3 font-semibold">عدد الطلبات</th>
-          <th class="p-3 font-semibold">إجراء</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (c of filteredCustomers(); track c.id) {
-          <tr class="border-b border-primary/10">
-            @if (editingId === c.id) {
-              <td colspan="6" class="bg-soft p-4">
-                <div class="flex flex-wrap items-end gap-3">
-                  <input
-                    type="text"
-                    [(ngModel)]="editForm.fullName"
-                    placeholder="الاسم"
-                    class="rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
-                  />
-                  <input
-                    type="email"
-                    [(ngModel)]="editForm.email"
-                    placeholder="البريد"
-                    class="rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
-                  />
-                  <textarea
-                    [(ngModel)]="editForm.address"
-                    placeholder="العنوان"
-                    rows="2"
-                    class="min-w-[200px] rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
-                  ></textarea>
-                  <button
-                    type="button"
-                    class="rounded-xl bg-primary px-4 py-2 font-medium text-white disabled:opacity-50"
-                    (click)="saveEdit()"
-                    [disabled]="saving()"
-                  >
-                    {{ saving() ? 'جاري الحفظ...' : 'حفظ' }}
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft"
-                    (click)="cancelEdit()"
-                  >
-                    إلغاء
-                  </button>
-                </div>
-              </td>
-            } @else {
-              <td class="p-3">{{ c.fullName }}</td>
-              <td class="p-3">{{ c.phone }}</td>
-              <td class="p-3">{{ c.email || "—" }}</td>
-              <td class="p-3">{{ c.address || "—" }}</td>
-              <td class="p-3">{{ getOrdersForCustomer(c) }}</td>
-              <td class="p-3">
-                <button
-                  type="button"
-                  class="rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft"
-                  (click)="openEdit(c)"
-                >
-                  تعديل
-                </button>
-              </td>
-            }
+  <div class="overflow-hidden rounded-2xl bg-white shadow-lg">
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-right">
+        <thead>
+          <tr class="bg-primary text-white">
+            <th class="p-3 font-semibold">رمز العميل</th>
+            <th class="p-3 font-semibold">الاسم</th>
+            <th class="p-3 font-semibold">الهاتف</th>
+            <th class="p-3 font-semibold">البريد</th>
+            <th class="p-3 font-semibold">عدد الطلبات</th>
+            <th class="p-3 font-semibold">إجراء</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (c of filteredCustomers(); track c.id) {
+            <tr
+              class="border-b border-primary/10"
+              [ngClass]="
+                editingId !== c.id ? 'cursor-pointer hover:bg-soft/50' : ''
+              "
+              (click)="editingId !== c.id && toggleExpand(c)"
+            >
+              @if (editingId === c.id) {
+                <td
+                  colspan="6"
+                  class="bg-soft p-4"
+                  (click)="$event.stopPropagation()"
+                >
+                  <div class="flex flex-wrap items-end gap-3">
+                    <input
+                      type="text"
+                      [(ngModel)]="editForm.fullName"
+                      placeholder="الاسم"
+                      class="rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+                    />
+                    <input
+                      type="email"
+                      [(ngModel)]="editForm.email"
+                      placeholder="البريد"
+                      class="rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+                    />
+                    <textarea
+                      [(ngModel)]="editForm.address"
+                      placeholder="العنوان"
+                      rows="2"
+                      class="min-w-[200px] rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+                    ></textarea>
+                    <button
+                      type="button"
+                      class="rounded-xl bg-primary px-4 py-2 font-medium text-white disabled:opacity-50"
+                      (click)="saveEdit()"
+                      [disabled]="saving()"
+                    >
+                      {{ saving() ? "جاري الحفظ..." : "حفظ" }}
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-xl border border-primary/20 px-4 py-2 font-medium hover:bg-soft"
+                      (click)="cancelEdit()"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </td>
+              } @else {
+                <td class="p-3 font-medium">{{ c.id }}</td>
+                <td class="p-3 font-medium">{{ c.fullName }}</td>
+                <td class="p-3">{{ c.phone }}</td>
+                <td class="p-3">{{ c.email || "—" }}</td>
+                <td class="p-3">{{ getOrdersForCustomer(c) }}</td>
+                <td class="p-3" (click)="$event.stopPropagation()">
+                  <button
+                    type="button"
+                    class="rounded-lg border border-primary/20 px-3 py-1.5 text-sm hover:bg-soft"
+                    (click)="openEdit(c)"
+                  >
+                    تعديل
+                  </button>
+                </td>
+              }
+            </tr>
+            @if (expandedId() === c.id && editingId !== c.id) {
+              <tr class="border-b border-primary/10 bg-soft/30">
+                <td colspan="6" class="p-4">
+                  <div class="rounded-xl bg-white p-4 shadow-inner">
+                    <p class="mb-2 text-sm font-semibold text-primary/80">
+                      العناوين
+                    </p>
+                    @if (expandedAddressesLoading()) {
+                      <p class="text-sm text-primary/60">
+                        جاري تحميل العناوين...
+                      </p>
+                    } @else if (expandedAddresses().length === 0) {
+                      <p class="text-sm text-primary/60">
+                        لا توجد عناوين مسجّلة.
+                      </p>
+                    } @else {
+                      <ul class="list-inside list-disc space-y-1 text-sm">
+                        @for (addr of expandedAddresses(); track addr.id) {
+                          <li>{{ formatAddressLine(addr) }}</li>
+                        }
+                      </ul>
+                    }
+                    <a
+                      [routerLink]="['/admin/orders']"
+                      [queryParams]="{ customerId: c.id }"
+                      class="mt-4 inline-block rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+                    >
+                      عرض طلبات هذا العميل ({{ getOrdersForCustomer(c) }})
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
 
-@if (filteredCustomers().length === 0) {
-  <p class="py-12 text-center text-primary/60">
-    لا يوجد عملاء أو لا توجد نتائج للبحث.
-  </p>
-}
+  @if (filteredCustomers().length === 0) {
+    <p class="py-12 text-center text-primary/60">
+      لا يوجد عملاء أو لا توجد نتائج للبحث.
+    </p>
+  }
 }

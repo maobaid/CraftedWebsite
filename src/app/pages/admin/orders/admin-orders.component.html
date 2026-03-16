@@ -1,67 +1,177 @@
 <h1 class="mb-6 text-2xl font-semibold text-primary">إدارة الطلبات</h1>
 
-<div class="mb-6 flex flex-wrap gap-2">
-  <button type="button" class="rounded-xl px-4 py-2 font-medium transition-colors" [class.bg-primary]="statusFilter() === 'all'" [class.text-white]="statusFilter() === 'all'" [class.bg-white]="statusFilter() !== 'all'" [class.shadow]="statusFilter() !== 'all'" (click)="setFilter('all')">الكل</button>
-  <button type="button" class="rounded-xl px-4 py-2 font-medium transition-colors" [class.bg-primary]="statusFilter() === 'pending'" [class.text-white]="statusFilter() === 'pending'" [class.bg-white]="statusFilter() !== 'pending'" [class.shadow]="statusFilter() !== 'pending'" (click)="setFilter('pending')">قيد الانتظار</button>
-  <button type="button" class="rounded-xl px-4 py-2 font-medium transition-colors" [class.bg-primary]="statusFilter() === 'confirmed'" [class.text-white]="statusFilter() === 'confirmed'" [class.bg-white]="statusFilter() !== 'confirmed'" [class.shadow]="statusFilter() !== 'confirmed'" (click)="setFilter('confirmed')">تم التأكيد</button>
-  <button type="button" class="rounded-xl px-4 py-2 font-medium transition-colors" [class.bg-primary]="statusFilter() === 'shipped'" [class.text-white]="statusFilter() === 'shipped'" [class.bg-white]="statusFilter() !== 'shipped'" [class.shadow]="statusFilter() !== 'shipped'" (click)="setFilter('shipped')">تم الشحن</button>
-  <button type="button" class="rounded-xl px-4 py-2 font-medium transition-colors" [class.bg-primary]="statusFilter() === 'delivered'" [class.text-white]="statusFilter() === 'delivered'" [class.bg-white]="statusFilter() !== 'delivered'" [class.shadow]="statusFilter() !== 'delivered'" (click)="setFilter('delivered')">تم التوصيل</button>
+<div class="mb-6 flex flex-wrap items-center gap-4">
+  <div class="flex flex-wrap items-center gap-2">
+    <input
+      type="text"
+      class="w-72 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+      placeholder="بحث برقم الطلب، اسم العميل، الهاتف، العنوان أو كود الخصم..."
+      [value]="search()"
+      (input)="search.set($any($event.target).value)"
+    />
+    @if (customerIdFilter()) {
+      <button
+        (click)="clearCustomerFilter()"
+        class="flex items-center gap-2 border border-accent/50 rounded-xl bg-white/30 px-3 py-2 text-sm font-medium text-accent transition-colors hover:underline"
+      >
+        عرض كل الطلبات
+        <app-hero-icon name="x-mark" size="20" />
+      </button>
+    }
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button
+      type="button"
+      class="rounded-xl px-4 py-2 font-medium transition-colors"
+      [class.bg-primary]="statusFilter() === 'all'"
+      [class.text-white]="statusFilter() === 'all'"
+      [class.bg-white]="statusFilter() !== 'all'"
+      [class.shadow]="statusFilter() !== 'all'"
+      (click)="setFilter('all')"
+    >
+      الكل
+    </button>
+    <button
+      type="button"
+      class="rounded-xl px-4 py-2 font-medium transition-colors"
+      [class.bg-primary]="statusFilter() === 'PENDING'"
+      [class.text-white]="statusFilter() === 'PENDING'"
+      [class.bg-white]="statusFilter() !== 'PENDING'"
+      [class.shadow]="statusFilter() !== 'PENDING'"
+      (click)="setFilter('PENDING')"
+    >
+      قيد الانتظار
+    </button>
+    <button
+      type="button"
+      class="rounded-xl px-4 py-2 font-medium transition-colors"
+      [class.bg-primary]="statusFilter() === 'CONFIRMED'"
+      [class.text-white]="statusFilter() === 'CONFIRMED'"
+      [class.bg-white]="statusFilter() !== 'CONFIRMED'"
+      [class.shadow]="statusFilter() !== 'CONFIRMED'"
+      (click)="setFilter('CONFIRMED')"
+    >
+      تم التأكيد
+    </button>
+    <button
+      type="button"
+      class="rounded-xl px-4 py-2 font-medium transition-colors"
+      [class.bg-primary]="statusFilter() === 'SHIPPED'"
+      [class.text-white]="statusFilter() === 'SHIPPED'"
+      [class.bg-white]="statusFilter() !== 'SHIPPED'"
+      [class.shadow]="statusFilter() !== 'SHIPPED'"
+      (click)="setFilter('SHIPPED')"
+    >
+      تم الشحن
+    </button>
+    <button
+      type="button"
+      class="rounded-xl px-4 py-2 font-medium transition-colors"
+      [class.bg-primary]="statusFilter() === 'DELIVERED'"
+      [class.text-white]="statusFilter() === 'DELIVERED'"
+      [class.bg-white]="statusFilter() !== 'DELIVERED'"
+      [class.shadow]="statusFilter() !== 'DELIVERED'"
+      (click)="setFilter('DELIVERED')"
+    >
+      تم التوصيل
+    </button>
+  </div>
 </div>
 
 <div class="space-y-4">
   @for (order of orders(); track order.id) {
     <div class="rounded-2xl bg-white p-5 shadow-lg">
-      <div class="mb-4 flex flex-wrap items-center gap-4 border-b border-primary/10 pb-3">
+      <div
+        class="mb-4 flex flex-wrap items-center gap-4 border-b border-primary/10 pb-3"
+      >
         <span class="font-semibold">#{{ order.id.slice(0, 8) }}</span>
-        <span class="text-sm text-primary/60">{{ order.createdAt | date:'short' }}</span>
+        <span class="text-sm text-primary/60">{{
+          order.createdAt | date: "medium"
+        }}</span>
         <span
           class="rounded-full px-3 py-1 text-sm font-medium"
-          [class.bg-amber-100]="order.status === 'pending'"
-          [class.text-amber-800]="order.status === 'pending'"
-          [class.bg-blue-100]="order.status === 'confirmed'"
-          [class.text-blue-800]="order.status === 'confirmed'"
-          [class.bg-cyan-100]="order.status === 'shipped'"
-          [class.text-cyan-800]="order.status === 'shipped'"
-          [class.bg-green-100]="order.status === 'delivered'"
-          [class.text-green-800]="order.status === 'delivered'"
-        >{{ statusLabel(order.status) }}</span>
+          [class.bg-amber-100]="order.status === 'PENDING'"
+          [class.text-amber-800]="order.status === 'PENDING'"
+          [class.bg-blue-100]="order.status === 'CONFIRMED'"
+          [class.text-blue-800]="order.status === 'CONFIRMED'"
+          [class.bg-cyan-100]="order.status === 'SHIPPED'"
+          [class.text-cyan-800]="order.status === 'SHIPPED'"
+          [class.bg-green-100]="order.status === 'DELIVERED'"
+          [class.text-green-800]="order.status === 'DELIVERED'"
+          >{{ statusLabel(order.status) }}</span
+        >
       </div>
       <div class="space-y-1 text-sm">
-        <p><strong>العميل:</strong> {{ order.customer.fullName }} — {{ order.customer.phone }}</p>
+        <p>
+          <strong>العميل:</strong> {{ order.customer.fullName }} —
+          {{ order.customer.phone }}
+        </p>
         @if (order.customer.address) {
           <p><strong>العنوان:</strong> {{ order.customer.address }}</p>
         }
-        <p><strong>موعد التوصيل:</strong> {{ order.deliveryMessage || '—' }}</p>
-        @if (order.productDiscountAmount != null && order.productDiscountAmount > 0) {
-          <p><strong>خصم المنتجات:</strong> {{ order.productDiscountAmount.toFixed(2) }} د.ك</p>
+        <p><strong>موعد التوصيل:</strong> {{ order.deliveryMessage || "—" }}</p>
+        @if (
+          order.productDiscountAmount != null && order.productDiscountAmount > 0
+        ) {
+          <p>
+            <strong>خصم المنتجات:</strong>
+            {{ order.productDiscountAmount.toFixed(2) }} د.ك
+          </p>
         }
-        @if (order.discountCode || (order.discountAmount != null && order.discountAmount > 0)) {
-          <p><strong>كود الخصم:</strong> {{ order.discountCode || '—' }}@if (order.discountAmount != null && order.discountAmount > 0) { ({{ order.discountAmount.toFixed(2) }} د.ك) }</p>
+        @if (
+          order.discountCode ||
+          (order.discountAmount != null && order.discountAmount > 0)
+        ) {
+          <p>
+            <strong>كود الخصم:</strong> {{ order.discountCode || "—" }}
+            @if (order.discountAmount != null && order.discountAmount > 0) {
+              ({{ order.discountAmount.toFixed(2) }} د.ك)
+            }
+          </p>
         }
-        <p><strong>المجموع الفرعي:</strong> {{ order.subtotal.toFixed(2) }} د.ك</p>
+        <p>
+          <strong>المجموع الفرعي:</strong> {{ order.subtotal.toFixed(2) }} د.ك
+        </p>
         <p><strong>الإجمالي:</strong> {{ order.total.toFixed(2) }} د.ك</p>
         <div class="mt-2 flex flex-wrap gap-2">
           @for (item of order.items; track item.product.id) {
-            <span class="rounded-lg bg-soft px-2 py-1 text-xs">{{ item.product.title }} × {{ item.quantity }}</span>
+            <span class="rounded-lg bg-soft px-2 py-1 text-xs"
+              >{{ item.product.title }} × {{ item.quantity }}</span
+            >
           }
         </div>
       </div>
-      <div class="mt-4 border-t border-primary/10 pt-3">
+      <div
+        class="mt-4 flex flex-wrap items-center gap-3 border-t border-primary/10 pt-3"
+      >
         <select
           [value]="order.status"
           (change)="updateStatus(order.id, $any($event.target).value)"
           class="rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
         >
-          <option value="pending">قيد الانتظار</option>
-          <option value="confirmed">تم التأكيد</option>
-          <option value="shipped">تم الشحن</option>
-          <option value="delivered">تم التوصيل</option>
+          <option value="PENDING">قيد الانتظار</option>
+          <option value="CONFIRMED">تم التأكيد</option>
+          <option value="SHIPPED">تم الشحن</option>
+          <option value="DELIVERED">تم التوصيل</option>
         </select>
+        <button
+          type="button"
+          (click)="printReceipt(order)"
+          class="rounded-xl border border-primary/20 bg-white px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-soft"
+        >
+          طباعة إيصال
+        </button>
       </div>
+    </div>
+  } @empty {
+    <div class="rounded-2xl bg-white p-5 shadow-lg">
+      @if (orderService.orders().length === 0) {
+        <p class="py-12 text-center text-primary/60">لا توجد طلبات.</p>
+      } @else if (orders().length === 0) {
+        <p class="py-12 text-center text-primary/60">
+          لا توجد طلبات مطابقة للبحث أو التصفية الحالية.
+        </p>
+      }
     </div>
   }
 </div>
-
-@if (orders().length === 0) {
-  <p class="py-12 text-center text-primary/60">لا توجد طلبات.</p>
-}

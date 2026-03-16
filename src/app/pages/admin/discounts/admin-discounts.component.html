@@ -1,5 +1,32 @@
-<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-  <h1 class="text-2xl font-semibold text-primary">إدارة خصومات المنتجات</h1>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-6">
+  <div class="space-y-3">
+    <h1 class="text-2xl font-semibold text-primary">إدارة خصومات المنتجات</h1>
+    <div class="flex flex-wrap gap-3">
+      <input
+        type="text"
+        class="w-64 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+        placeholder="بحث بالاسم..."
+        [(ngModel)]="search"
+      />
+      <select
+        class="w-40 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+        [(ngModel)]="statusFilter"
+      >
+        <option value="all">كل الحالات</option>
+        <option value="active">مفعّل</option>
+        <option value="inactive">معطّل</option>
+      </select>
+      <select
+        class="w-52 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+        [(ngModel)]="appliesToFilter"
+      >
+        <option value="all">كل التطبيقات</option>
+        @for (opt of appliesToOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
   <button
     type="button"
     class="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white"
@@ -129,7 +156,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (d of discountService.discounts(); track d.id) {
+        @for (d of filteredDiscounts; track d.id) {
           <tr class="border-b border-primary/10">
             <td class="p-3 font-medium">{{ d.name }}</td>
             <td class="p-3">{{ d.percentage }}%</td>
@@ -158,6 +185,20 @@
               }
             </td>
           </tr>
+        } @empty {
+          @if (discountService.discounts().length === 0) {
+            <tr>
+              <td colspan="7" class="p-6 text-center text-primary/60">
+                لا توجد خصومات. أضف خصماً من الزر أعلاه.
+              </td>
+            </tr>
+          } @else {
+            <tr>
+              <td colspan="7" class="p-6 text-center text-primary/60">
+                لا توجد خصومات مطابقة للبحث أو التصفيات الحالية.
+              </td>
+            </tr>
+          }
         }
       </tbody>
     </table>

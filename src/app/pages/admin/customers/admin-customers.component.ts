@@ -1,8 +1,11 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../core/services/order.service';
 import { StoreCustomerService } from '../../../core/services/store-customer.service';
 import { StoreCustomerResponse } from '../../../core/models/customer.model';
+import { Address, formatAddressLine } from '../../../core/models/address.model';
 
 /** Row shape for admin customers table (id from API, display fields). */
 export interface AdminCustomerRow {
@@ -16,7 +19,7 @@ export interface AdminCustomerRow {
 @Component({
   selector: 'app-admin-customers',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, NgClass, RouterLink],
   templateUrl: './admin-customers.component.html',
 })
 export class AdminCustomersComponent implements OnInit {
@@ -27,6 +30,11 @@ export class AdminCustomersComponent implements OnInit {
   editingId: string | null = null;
   editForm = { fullName: '', email: '', address: '' };
   saving = signal(false);
+  /** Expanded row: show details (addresses, orders). */
+  expandedId = signal<string | null>(null);
+  /** Addresses for the expanded customer. */
+  expandedAddresses = signal<Address[]>([]);
+  expandedAddressesLoading = signal(false);
 
   private orderService = inject(OrderService);
   private storeCustomer = inject(StoreCustomerService);
@@ -109,4 +117,26 @@ export class AdminCustomersComponent implements OnInit {
   getOrdersForCustomer(c: AdminCustomerRow): number {
     return this.orderService.orders().filter((o) => o.customerId === c.id).length;
   }
+
+  toggleExpand(c: AdminCustomerRow): void {
+    if (this.editingId === c.id) return;
+    const current = this.expandedId();
+    if (current === c.id) {
+      this.expandedId.set(null);
+      this.expandedAddresses.set([]);
+      return;
+    }
+    this.expandedId.set(c.id);
+    this.expandedAddresses.set([]);
+    this.expandedAddressesLoading.set(true);
+    this.storeCustomer.getAddresses(c.id).subscribe({
+      next: (addrs) => {
+        this.expandedAddresses.set(addrs);
+        this.expandedAddressesLoading.set(false);
+      },
+      error: () => this.expandedAddressesLoading.set(false),
+    });
+  }
+
+  formatAddressLine = formatAddressLine;
 }

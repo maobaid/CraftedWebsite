@@ -1,6 +1,6 @@
 import { CartItem } from './product.model';
 
-export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered';
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED';
 
 export interface CustomerInfo {
   phone: string;

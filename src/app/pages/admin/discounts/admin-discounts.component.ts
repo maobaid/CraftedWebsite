@@ -22,6 +22,9 @@ export class AdminDiscountsComponent implements OnInit {
   showForm = false;
   editingId: string | null = null;
   appliesToOptions = APPLIES_TO_OPTIONS;
+  search = '';
+  statusFilter: 'all' | 'active' | 'inactive' = 'all';
+  appliesToFilter: 'all' | AppliesTo = 'all';
   form = {
     name: '',
     percentage: 0,
@@ -36,6 +39,19 @@ export class AdminDiscountsComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   constructor(public discountService: ProductDiscountService) {}
+
+  get filteredDiscounts(): ProductDiscount[] {
+    const q = this.search.trim().toLowerCase();
+    const status = this.statusFilter;
+    const appliesTo = this.appliesToFilter;
+    return this.discountService.discounts().filter((d) => {
+      if (q && !(d.name ?? '').toLowerCase().includes(q)) return false;
+      if (status === 'active' && d.is_active === false) return false;
+      if (status === 'inactive' && d.is_active !== false) return false;
+      if (appliesTo !== 'all' && d.applies_to !== appliesTo) return false;
+      return true;
+    });
+  }
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe((params) => {
