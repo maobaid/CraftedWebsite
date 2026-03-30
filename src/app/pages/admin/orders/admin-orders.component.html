@@ -1,10 +1,10 @@
 <h1 class="mb-6 text-2xl font-semibold text-primary">إدارة الطلبات</h1>
 
 <div class="mb-6 flex flex-wrap items-center gap-4">
-  <div class="flex flex-wrap items-center gap-2">
+  <div class="flex items-between justify-between w-full">
     <input
       type="text"
-      class="w-72 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
+      class="w-100 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
       placeholder="بحث برقم الطلب، اسم العميل، الهاتف، العنوان أو كود الخصم..."
       [value]="search()"
       (input)="search.set($any($event.target).value)"
@@ -12,7 +12,7 @@
     @if (customerIdFilter()) {
       <button
         (click)="clearCustomerFilter()"
-        class="flex items-center gap-2 border border-accent/50 rounded-xl bg-white/30 px-3 py-2 text-sm font-medium text-accent transition-colors hover:underline"
+        class="flex items-center gap-2 border border-accent/50 rounded-xl bg-white/30 px-3 py-2 text-sm font-medium text-accent transition-colors hover:shadow"
       >
         عرض كل الطلبات
         <app-hero-icon name="x-mark" size="20" />
@@ -133,8 +133,13 @@
           <strong>المجموع الفرعي:</strong> {{ order.subtotal.toFixed(2) }} د.ك
         </p>
         <p><strong>الإجمالي:</strong> {{ order.total.toFixed(2) }} د.ك</p>
-        <div class="mt-2 flex flex-wrap gap-2">
+        <div class="mt-2 flex flex-wrap gap-2 items-center">
           @for (item of order.items; track item.product.id) {
+            <img
+              [src]="item.product.image_url || defaultProductImage"
+              [alt]="item.product.title || 'صورة المنتج'"
+              class="w-10 h-10 object-cover rounded-lg"
+            />
             <span class="rounded-lg bg-soft px-2 py-1 text-xs"
               >{{ item.product.title }} × {{ item.quantity }}</span
             >

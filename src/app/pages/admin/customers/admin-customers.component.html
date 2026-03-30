@@ -29,6 +29,7 @@
       <table class="w-full border-collapse text-right">
         <thead>
           <tr class="bg-primary text-white">
+            <th class="w-12 p-3 text-center font-semibold"></th>
             <th class="p-3 font-semibold">رمز العميل</th>
             <th class="p-3 font-semibold">الاسم</th>
             <th class="p-3 font-semibold">الهاتف</th>
@@ -48,7 +49,7 @@
             >
               @if (editingId === c.id) {
                 <td
-                  colspan="6"
+                  colspan="7"
                   class="bg-soft p-4"
                   (click)="$event.stopPropagation()"
                 >
@@ -89,7 +90,12 @@
                   </div>
                 </td>
               } @else {
-                <td class="p-3 font-medium">{{ c.id }}</td>
+                <td class="p-3 text-center text-primary/70">
+                  <span class="inline-block text-base">
+                    {{ expandedId() === c.id ? "▾" : "◂" }}
+                  </span>
+                </td>
+                <td class="p-3 font-medium">#{{ c.id.slice(0, 8) }}</td>
                 <td class="p-3 font-medium">{{ c.fullName }}</td>
                 <td class="p-3">{{ c.phone }}</td>
                 <td class="p-3">{{ c.email || "—" }}</td>
@@ -107,7 +113,7 @@
             </tr>
             @if (expandedId() === c.id && editingId !== c.id) {
               <tr class="border-b border-primary/10 bg-soft/30">
-                <td colspan="6" class="p-4">
+                <td colspan="7" class="p-4">
                   <div class="rounded-xl bg-white p-4 shadow-inner">
                     <p class="mb-2 text-sm font-semibold text-primary/80">
                       العناوين

@@ -83,6 +83,7 @@ export class AdminOrdersComponent implements OnInit {
 
   readonly storeName = 'متجر كرافتد';
   readonly storeLogoPath = '/logo.PNG';
+  readonly defaultProductImage = DEFAULT_PRODUCT_IMAGE;
 
   printReceipt(order: Order): void {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -110,7 +111,7 @@ export class AdminOrdersComponent implements OnInit {
       .map((item) => {
         const price = getProductPrice(item.product);
         const lineTotal = price * item.quantity;
-        const src = imgUrl(item.product.image_url || DEFAULT_PRODUCT_IMAGE);
+        const src = imgUrl(item.product.image_url || this.defaultProductImage);
         return `<tr>
           <td class="col-img"><img src="${attrEsc(src)}" alt="" /></td>
           <td>${esc(item.product.title)}</td>
@@ -174,7 +175,6 @@ export class AdminOrdersComponent implements OnInit {
         <div>
           <p><strong>رقم الطلب</strong> #${esc(order.id.slice(0, 8))}</p>
           <p><strong>التاريخ</strong> ${esc(created)}</p>
-          <p><strong>الحالة</strong> ${esc(this.statusLabel(order.status))}</p>
         </div>
         <div>
           <p><strong>العميل</strong> ${esc(order.customer.fullName)}</p>
