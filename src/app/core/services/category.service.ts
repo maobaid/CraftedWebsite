@@ -108,6 +108,8 @@ function normalizeCategory(c: Category): Category {
     slug: c.slug ?? '',
     parent_id: c.parent_id ?? null,
     is_active: c.is_active !== false,
+    products_count:
+      typeof c.products_count === 'number' ? c.products_count : undefined,
   };
 }
 

@@ -1,4 +1,25 @@
 // Product model matches backend DTO exactly
+export interface ProductVariant {
+  id: string;
+  color: string | null;
+  size: string | null;
+  price_override: number | string | null;
+  stock_quantity: number;
+  low_stock_threshold: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+/** Payload for create/update product (no server ids on nested variants). */
+export interface ProductVariantInput {
+  color?: string | null;
+  size?: string | null;
+  price_override?: number | null;
+  stock_quantity: number;
+  low_stock_threshold?: number;
+  is_active?: boolean;
+}
+
 export interface Product {
   id: string;
   category_id: string | null;
@@ -7,19 +28,196 @@ export interface Product {
   price: number;
   image_url: string | null;
   is_active: boolean;
+  colors: string[];
+  sizes: string[];
+  stock_quantity: number;
+  low_stock_threshold: number;
+  in_stock: boolean;
+  is_low_stock: boolean;
+  variants: ProductVariant[];
 }
 
-export const DEFAULT_PRODUCT_IMAGE = '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG';
+export const DEFAULT_PRODUCT_IMAGE =
+  '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG';
 
 export interface CartItem {
   product: Product;
   quantity: number;
+  /** Resolved variant when product uses variant stock; sent at checkout as product_variant_id. */
+  product_variant_id?: string;
+  selectedColorHex?: string;
+  selectedSize?: string;
+}
+
+export function normalizeColorKey(c: string | null | undefined): string {
+  return (c ?? '').trim().toLowerCase();
+}
+
+export function parsePriceOverride(
+  v: number | string | null | undefined,
+): number | null {
+  if (v == null || v === '') return null;
+  const n = typeof v === 'number' ? v : parseFloat(String(v));
+  return Number.isFinite(n) ? n : null;
+}
+
+/** API may send product.price as a string; normalize for display and cart math. */
+export function parseNonNegativeProductPrice(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, value);
+  }
+  if (typeof value === 'string') {
+    const n = parseFloat(value.trim());
+    return Number.isFinite(n) ? Math.max(0, n) : 0;
+  }
+  return 0;
+}
+
+export function productHasVariants(p: Pick<Product, 'variants'>): boolean {
+  return Array.isArray(p.variants) && p.variants.length > 0;
+}
+
+export function isVariantSelectable(v: ProductVariant): boolean {
+  return v.is_active !== false && v.stock_quantity > 0;
+}
+
+/** Unit price before coupon-level discounts: variant override or product base. */
+export function getCartUnitBasePrice(
+  product: Product,
+  productVariantId?: string,
+): number {
+  if (productVariantId && product.variants?.length) {
+    const variant = product.variants.find((x) => x.id === productVariantId);
+    if (variant && variant.is_active !== false) {
+      const override = parsePriceOverride(variant.price_override);
+      if (override != null) return Math.max(0, override);
+    }
+  }
+  return parseNonNegativeProductPrice(product.price);
+}
+
+/**
+ * Match variant when color/size selections align with variant fields.
+ * Empty selection skips that dimension only if variant has no value for it.
+ */
+export function findMatchingVariant(
+  product: Product,
+  colorHex: string,
+  size: string,
+): ProductVariant | null {
+  if (!product.variants?.length) return null;
+  const c = normalizeColorKey(colorHex);
+  const s = size.trim();
+  for (const v of product.variants) {
+    if (v.is_active === false) continue;
+    const vc = normalizeColorKey(v.color);
+    const vs = (v.size ?? '').trim();
+    if (c && vc !== c) continue;
+    if (s && vs !== s) continue;
+    if (!c && v.color) continue;
+    if (!s && v.size) continue;
+    return v;
+  }
+  return null;
+}
+
+/** Distinct colors from active variants (any stock) — storefront pickers; OOS handled via variantColorSelectable. */
+export function uniqueVariantColors(product: Product): string[] {
+  if (!product.variants?.length) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const v of product.variants) {
+    if (v.is_active === false || !v.color) continue;
+    const key = normalizeColorKey(v.color);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(v.color.trim());
+  }
+  return out;
+}
+
+/**
+ * Distinct sizes for optional selected color (hex); when empty, sizes from
+ * active variants that do not require a color match (size-only dimension).
+ */
+export function uniqueVariantSizes(
+  product: Product,
+  selectedColorHex: string,
+): string[] {
+  if (!product.variants?.length) return [];
+  const c = normalizeColorKey(selectedColorHex);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const v of product.variants) {
+    if (v.is_active === false || !v.size?.trim()) continue;
+    const vc = normalizeColorKey(v.color);
+    if (c && vc !== c) continue;
+    if (!c && v.color) continue;
+    const sz = v.size.trim();
+    if (seen.has(sz)) continue;
+    seen.add(sz);
+    out.push(sz);
+  }
+  return out;
+}
+
+export function variantColorSelectable(
+  product: Product,
+  hex: string,
+  selectedSize: string,
+): boolean {
+  if (!product.variants?.length) return true;
+  return product.variants.some(
+    (v) =>
+      isVariantSelectable(v) &&
+      normalizeColorKey(v.color) === normalizeColorKey(hex) &&
+      (!selectedSize.trim() ||
+        (v.size ?? '').trim() === selectedSize.trim()),
+  );
+}
+
+export function variantSizeSelectable(
+  product: Product,
+  size: string,
+  selectedColorHex: string,
+): boolean {
+  if (!product.variants?.length) return true;
+  const c = normalizeColorKey(selectedColorHex);
+  const sz = size.trim();
+  return product.variants.some((v) => {
+    if (!isVariantSelectable(v)) return false;
+    if ((v.size ?? '').trim() !== sz) return false;
+    const vc = normalizeColorKey(v.color);
+    if (c) return vc === c;
+    return !v.color;
+  });
+}
+
+/** Colors to show on card/PDP: variants drive when present, else product.colors */
+export function displayColors(product: Product): string[] {
+  if (productHasVariants(product)) {
+    const u = uniqueVariantColors(product);
+    if (u.length) return u;
+  }
+  return product.colors ?? [];
+}
+
+/** Sizes to show: filtered by selected color when using variants */
+export function displaySizes(
+  product: Product,
+  selectedColorHex: string,
+): string[] {
+  if (productHasVariants(product)) {
+    const fromVariants = uniqueVariantSizes(product, selectedColorHex);
+    if (fromVariants.length) return fromVariants;
+    return product.sizes ?? [];
+  }
+  return product.sizes ?? [];
 }
 
 /** Price to show for a product (no discount; discounts come from product_discount table). */
 export function getProductPrice(product: Product): number {
-  const price = typeof product?.price === 'number' && !Number.isNaN(product.price) ? product.price : 0;
-  return price;
+  return parseNonNegativeProductPrice(product?.price);
 }
 
 // ─── Product discount (separate table: product_discount) ─────────────────────

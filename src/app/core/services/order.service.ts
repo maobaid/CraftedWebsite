@@ -180,9 +180,7 @@ export class OrderService {
   createOrderApi(dto: CreateOrderDto): Observable<OrderResponse | null> {
     const storeId = environment.storeId ?? this.getStoreId();
     if (!storeId) return of(null);
-    return this.http
-      .post<OrderResponse>(`/stores/${storeId}/orders`, dto)
-      .pipe(catchError(() => of(null)));
+    return this.http.post<OrderResponse>(`/stores/${storeId}/orders`, dto);
   }
 
   /** Update order status via API. */
@@ -334,8 +332,16 @@ function apiOrderToOrder(api: OrderResponse): Order {
       price: parseNum(it.product_price ?? it.unit_price),
       image_url: null,
       is_active: true,
+      colors: [],
+      sizes: [],
+      variants: [],
+      stock_quantity: 0,
+      low_stock_threshold: 5,
+      in_stock: true,
+      is_low_stock: false,
     },
     quantity: it.quantity ?? 1,
+    product_variant_id: it.product_variant_id,
   }));
 
   const created_at = api.created_at ?? new Date().toISOString();

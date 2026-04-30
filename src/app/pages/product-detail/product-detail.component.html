@@ -1,5 +1,6 @@
 <div class="mx-auto max-w-4xl px-5">
   @if (product) {
+    @let p = product;
     <div class="mb-4 flex items-center justify-between gap-2">
       <h1 class="text-2xl font-semibold text-primary">تفاصيل المنتج</h1>
       <a
@@ -15,18 +16,18 @@
     >
       <div class="aspect-square bg-soft">
         <img
-          [src]="product.image_url || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
-          [alt]="product.title"
+          [src]="p.image_url || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
+          [alt]="p.title"
           class="h-full w-full object-cover"
         />
       </div>
       <div class="flex flex-col gap-4 p-6 md:p-8">
         <h1 class="text-2xl font-semibold text-primary">
-          {{ product.title }}
+          {{ p.title }}
         </h1>
-        @if (product.description) {
+        @if (p.description) {
           <p class="text-primary/70 leading-relaxed">
-            {{ product.description }}
+            {{ p.description }}
           </p>
         }
         @if (priceInfo) {
@@ -35,16 +36,115 @@
               <span class="text-primary/60 line-through">{{ priceInfo.originalPrice }} د.ك</span>
             }
             <span class="text-2xl font-semibold text-accent">{{ priceInfo.price }} د.ك</span>
+            @if (productHasVariants(p)) {
+              @let rq = resolvedVariantQuantity(p);
+              @if (rq !== null) {
+                @if (!canAddLine(p)) {
+                  <span
+                    class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
+                  >
+                    غير متوفر
+                  </span>
+                } @else if (resolvedVariantLowStock(p)) {
+                  <span
+                    class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
+                  >
+                    متوفر
+                  </span>
+                  <span
+                    class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+                  >
+                    مخزون منخفض ({{ rq }})
+                  </span>
+                } @else {
+                  <span
+                    class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
+                  >
+                    متوفر ({{ rq }})
+                  </span>
+                }
+              } @else {
+                <span
+                  class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary/70"
+                >
+                  اختر اللون والمقاس للتفاصيل
+                </span>
+              }
+            } @else {
+              <span
+                class="rounded-full px-2 py-0.5 text-xs font-medium"
+                [class.bg-green-100]="p.in_stock"
+                [class.text-green-700]="p.in_stock"
+                [class.bg-red-100]="!p.in_stock"
+                [class.text-red-700]="!p.in_stock"
+              >
+                {{ p.in_stock ? "متوفر" : "غير متوفر" }}
+              </span>
+              @if (p.in_stock && p.is_low_stock) {
+                <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  مخزون منخفض ({{ p.stock_quantity }})
+                </span>
+              }
+            }
+          </div>
+        }
+        @if (displayColorsFn(p).length > 0) {
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-sm text-primary/70">اللون:</span>
+            @for (hex of displayColorsFn(p); track hex) {
+              <button
+                type="button"
+                class="h-6 w-6 rounded-full border-2 transition-all disabled:cursor-not-allowed disabled:opacity-35"
+                [style.background]="hex"
+                [class.border-primary]="selectedColorHex === hex"
+                [class.border-gray-300]="selectedColorHex !== hex"
+                [disabled]="colorDisabled(p, hex)"
+                [ngClass]="{
+                  'ring-2': selectedColorHex === hex,
+                  'ring-primary/40': selectedColorHex === hex,
+                  'ring-offset-1': selectedColorHex === hex,
+                  'scale-110': selectedColorHex === hex,
+                  shadow: selectedColorHex === hex
+                }"
+                (click)="onSelectColor(hex)"
+                title="اختر اللون"
+              ></button>
+            }
+          </div>
+        }
+        @if (displaySizesFn(p, selectedColorHex).length > 0) {
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-sm text-primary/70">المقاس:</span>
+            @for (size of displaySizesFn(p, selectedColorHex); track size) {
+              <button
+                type="button"
+                class="rounded-md border px-2 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-35"
+                [class.border-primary]="selectedSize === size"
+                [class.bg-soft]="selectedSize === size"
+                [class.border-gray-300]="selectedSize !== size"
+                [disabled]="sizeDisabled(p, size)"
+                (click)="selectedSize = size; optionMessage = ''"
+              >
+                {{ size }}
+              </button>
+            }
           </div>
         }
         <button
           type="button"
-          class="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 text-lg font-medium text-white transition-transform duration-150 hover:brightness-105 active:scale-95 active:shadow-sm"
+          class="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 text-lg font-medium text-white transition-transform duration-150 hover:brightness-105 active:scale-95 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-55"
           (click)="addToCart()"
+          [disabled]="!canAddLine(p)"
         >
           <app-hero-icon name="plus" size="22" />
           أضف إلى السلة
         </button>
+        @if (optionMessage) {
+          <p class="text-sm text-red-600">{{ optionMessage }}</p>
+        }
+        @if (outOfStockMessage) {
+          <p class="text-sm text-red-600">{{ outOfStockMessage }}</p>
+        }
       </div>
     </div>
   } @else {

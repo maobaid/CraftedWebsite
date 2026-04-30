@@ -5,7 +5,7 @@
   <!-- Image on the right (for RTL), clickable to go to details -->
   <a
     [routerLink]="['/product', p.id]"
-    class="flex h-full w-24 shrink-0 self-stretch overflow-hidden bg-soft/40 md:h-40 md:w-full md:aspect-square"
+    class="relative flex h-full w-34 shrink-0 self-stretch overflow-hidden bg-soft/40 md:h-40 md:w-full md:aspect-square"
   >
     <img
       [src]="p.image_url || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
@@ -13,34 +13,140 @@
       loading="lazy"
       class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
     />
+    @let imagePriceInfo = effectivePrice();
+    <span
+      class="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-primary shadow-sm backdrop-blur-sm md:px-3 md:py-1.5 md:text-sm"
+    >
+      {{ imagePriceInfo.price }} د.ك
+      @if (imagePriceInfo.discount) {
+        <span class="text-sm text-primary/60 line-through">
+          {{ imagePriceInfo.originalPrice }} د.ك
+        </span>
+      }
+    </span>
   </a>
 
-  <!-- Text/content on the left -->
   <div class="flex flex-1 flex-col gap-2 p-4 md:p-5">
+    @let priceInfo = effectivePrice();
     <h3
       class="text-base font-semibold leading-snug text-primary md:text-lg hover:underline"
       [routerLink]="['/product', p.id]"
     >
       {{ p.title }}
     </h3>
-    @let priceInfo = effectivePrice();
-    <div class="flex flex-wrap items-center gap-1.5 text-sm md:gap-2">
-      @if (priceInfo.discount) {
-        <span class="text-sm text-primary/60 line-through">{{ priceInfo.originalPrice }} د.ك</span>
+    @if (priceInfo.discount) {
+      <div class="text-sm text-primary/60 line-through">
+        {{ priceInfo.originalPrice }} د.ك
+      </div>
+    }
+    <div class="flex flex-wrap items-center gap-2">
+      @if (productHasVariants(p)) {
+        @let rv = resolvedVariantForUi(p);
+        @if (rv === null) {
+          <span
+            class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary/70"
+          >
+            اختر الخيارات
+          </span>
+        } @else if (!variantSelectable(rv)) {
+          <span
+            class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
+          >
+            غير متوفر
+          </span>
+        } @else {
+          <span
+            class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
+          >
+            متوفر
+          </span>
+          @if (variantLowBadge(rv)) {
+            <span
+              class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+            >
+              مخزون منخفض
+            </span>
+          }
+        }
+      } @else {
+        <span
+          class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+          [class.bg-green-100]="p.in_stock"
+          [class.text-green-700]="p.in_stock"
+          [class.bg-red-100]="!p.in_stock"
+          [class.text-red-700]="!p.in_stock"
+        >
+          {{ p.in_stock ? "متوفر" : "غير متوفر" }}
+        </span>
+        @if (p.in_stock && p.is_low_stock) {
+          <span
+            class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+          >
+            مخزون منخفض
+          </span>
+        }
       }
-      <span
-        class="inline-flex items-center gap-1 rounded-full bg-white/80 px-3 py-1 text-sm font-semibold text-primary shadow-sm backdrop-blur-sm md:px-3.5 md:py-1.5 md:text-base"
-      >
-        {{ priceInfo.price }} د.ك
-      </span>
     </div>
+    @if (displayColorsFn(p).length > 0) {
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-sm font-medium text-primary/80">اللون</span>
+        @for (hex of displayColorsFn(p); track hex) {
+          <button
+            type="button"
+            class="h-5 w-5 rounded-full border-2 transition-all disabled:cursor-not-allowed disabled:opacity-35"
+            [style.background]="hex"
+            [class.border-primary]="selectedColorHex === hex"
+            [class.border-gray-300]="selectedColorHex !== hex"
+            [disabled]="colorDisabled(p, hex)"
+            [ngClass]="{
+              'ring-2': selectedColorHex === hex,
+              'ring-accent/60': selectedColorHex === hex,
+              'ring-offset-1': selectedColorHex === hex,
+              'scale-110': selectedColorHex === hex,
+              shadow: selectedColorHex === hex,
+            }"
+            (click)="onSelectColor(hex, p)"
+            title="اختر اللون"
+          ></button>
+        }
+      </div>
+    }
+    @if (displaySizesFn(p, selectedColorHex).length > 0) {
+      <div class="flex flex-wrap gap-1.5">
+        <span class="text-sm font-medium text-primary/80">المقاس</span>
+        @for (size of displaySizesFn(p, selectedColorHex); track size) {
+          <button
+            type="button"
+            class="rounded-md border px-2 py-0.5 text-xs border-primary/40 disabled:cursor-not-allowed disabled:opacity-35"
+            [ngClass]="{
+              'bg-accent/60': selectedSize === size,
+              'border-accent/60': selectedSize === size,
+              'border-primary': selectedSize === size,
+            }"
+            [class.border-gray-300]="selectedSize !== size"
+            [disabled]="sizeDisabled(p, size)"
+            (click)="selectedSize = size; optionMessage = ''"
+          >
+            {{ size }}
+          </button>
+        }
+      </div>
+    }
+
     <button
       type="button"
-      class="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white transition-all hover:brightness-105 hover:shadow-md active:scale-95 active:shadow-sm md:px-4 md:py-3 md:text-base"
+      class="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white transition-all hover:brightness-105 hover:shadow-md active:scale-95 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-55 md:px-4 md:py-3 md:text-base"
       (click)="addToCart(p)"
+      [disabled]="!canAddLine(p)"
     >
       <app-hero-icon name="plus" size="18" />
       أضف إلى السلة
     </button>
+    @if (optionMessage) {
+      <p class="text-xs text-red-600">{{ optionMessage }}</p>
+    }
+    @if (outOfStockMessage) {
+      <p class="text-xs text-red-600">{{ outOfStockMessage }}</p>
+    }
   </div>
 </div>

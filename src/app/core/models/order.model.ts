@@ -40,6 +40,8 @@ export interface Order {
 export interface CreateOrderItemDto {
   product_id: string;
   quantity: number;
+  /** When the line uses variant stock / pricing — required for storefront variant products at checkout */
+  product_variant_id?: string;
 }
 
 export interface CreateOrderDto {
@@ -54,6 +56,7 @@ export interface CreateOrderDto {
 export interface OrderItemResponse {
   product_id: string;
   quantity: number;
+  product_variant_id?: string;
   unit_price?: string | number;
   product_discount_applied?: string | number;
   product_title?: string;

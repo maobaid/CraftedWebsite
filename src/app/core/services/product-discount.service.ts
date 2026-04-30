@@ -5,8 +5,12 @@ import {
   ProductDiscount,
   ProductPriceResult,
   AppliesTo,
+  findMatchingVariant,
+  getCartUnitBasePrice,
+  productHasVariants,
 } from '../models/product.model';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 /** API response for GET /stores/{storeId}/product-discounts */
 interface ProductDiscountsListResponse {
@@ -28,7 +32,7 @@ export class ProductDiscountService {
 
   private getStoreId(): string | null {
     const user = this.auth.user();
-    return user?.store_id ?? null;
+    return user?.store_id ?? environment.storeId ?? null;
   }
 
   private getAuthHeaders(): { headers?: HttpHeaders } {
@@ -110,8 +114,34 @@ export class ProductDiscountService {
       });
   }
 
-  getEffectivePrice(product: Product): ProductPriceResult {
-    const originalPrice = product.price;
+  /**
+   * Unit price uses variant `price_override` when that variant applies, else
+   * `product.price`. Product discounts (percentage) apply on top of that base.
+   * Pass `product_variant_id` from cart/checkout when known; otherwise pass
+   * `selectedColorHex` / `selectedSize` so a matching variant can be resolved.
+   */
+  getEffectivePrice(
+    product: Product,
+    options?: {
+      product_variant_id?: string;
+      selectedColorHex?: string;
+      selectedSize?: string;
+    },
+  ): ProductPriceResult {
+    let variantId = options?.product_variant_id?.trim();
+    if (variantId && product.variants?.length) {
+      const exists = product.variants.some((x) => x.id === variantId);
+      if (!exists) variantId = undefined;
+    }
+    if (!variantId && productHasVariants(product)) {
+      const v = findMatchingVariant(
+        product,
+        options?.selectedColorHex ?? '',
+        options?.selectedSize ?? '',
+      );
+      variantId = v?.id?.trim();
+    }
+    const originalPrice = getCartUnitBasePrice(product, variantId);
     const now = new Date();
     const list = this.discountsSignal();
 

@@ -178,6 +178,9 @@
               >
                 {{ c.is_active !== false ? "مفعّل" : "معطّل" }}
               </span>
+              <span class="rounded-full bg-soft px-2 py-0.5 text-xs text-primary/80">
+                المنتجات: {{ c.products_count ?? 0 }}
+              </span>
               @if (c.id) {
                 <button
                   type="button"
@@ -263,6 +266,9 @@
               >
                 {{ root.is_active !== false ? "مفعّل" : "معطّل" }}
               </span>
+              <span class="rounded-full bg-soft px-3 py-1 text-xs font-medium text-primary/80">
+                المنتجات: {{ root.products_count ?? 0 }}
+              </span>
               @if (root.id) {
                 <button
                   type="button"
@@ -320,6 +326,9 @@
                         {{
                           item.category.is_active !== false ? "مفعّل" : "معطّل"
                         }}
+                      </span>
+                      <span class="rounded-full bg-soft px-2 py-0.5 text-xs text-primary/80">
+                        المنتجات: {{ item.category.products_count ?? 0 }}
                       </span>
                       @if (item.category.id) {
                         <button

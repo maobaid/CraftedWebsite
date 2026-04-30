@@ -13,13 +13,16 @@
   @if (count()) {
     <div class="grid gap-8 lg:grid-cols-[1fr_320px]">
       <div class="overflow-hidden rounded-2xl bg-white shadow-lg">
-        @for (item of cart(); track item.product.id) {
+        @for (item of cart(); track itemKey(item)) {
           <div
             class="flex flex-wrap items-center gap-4 border-b border-primary/10 p-5 last:border-0 sm:flex-nowrap"
           >
             <div class="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-soft">
               <img
-                [src]="item.product.image_url || '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'"
+                [src]="
+                  item.product.image_url ||
+                  '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG'
+                "
                 [alt]="item.product.title"
                 class="h-full w-full object-cover"
               />
@@ -31,11 +34,78 @@
               <p class="text-sm text-primary/60">
                 {{ getPriceInfo(item).price }} د.ك للوحدة
               </p>
+              @if (item.selectedColorHex || item.selectedSize) {
+                <p class="mt-1 text-xs text-primary/70">
+                  @if (item.selectedColorHex) {
+                    <span class="inline-flex items-center gap-1">
+                      اللون:
+                      <span
+                        class="h-3.5 w-3.5 rounded-full border border-primary/20"
+                        [style.background]="item.selectedColorHex"
+                      ></span>
+                    </span>
+                  }
+                  @if (item.selectedSize) {
+                    <span class="mr-3">المقاس: {{ item.selectedSize }}</span>
+                  }
+                </p>
+              }
+              @if (isEditingOptions(item) && itemHasOptions(item)) {
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  @if (displayColorsFn(item.product).length > 0) {
+                    <span class="text-xs text-primary/70">تغيير اللون:</span>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      @for (hex of displayColorsFn(item.product); track hex) {
+                        <button
+                          type="button"
+                          class="h-5 w-5 rounded-full border-2 transition-all"
+                          [style.background]="hex"
+                          [class.border-primary]="item.selectedColorHex === hex"
+                          [class.border-gray-300]="
+                            item.selectedColorHex !== hex
+                          "
+                          [ngClass]="{
+                            'ring-2': item.selectedColorHex === hex,
+                            'ring-primary/40': item.selectedColorHex === hex,
+                            'ring-offset-1': item.selectedColorHex === hex,
+                            'scale-110': item.selectedColorHex === hex,
+                            shadow: item.selectedColorHex === hex,
+                          }"
+                          (click)="updateColor(item, hex)"
+                          [title]="hex"
+                        ></button>
+                      }
+                    </div>
+                  }
+                  @if (
+                    displaySizesFn(item.product, item.selectedColorHex ?? '')
+                      .length > 0
+                  ) {
+                    <label class="text-xs text-primary/70">تغيير المقاس:</label>
+                    <select
+                      class="rounded-md border border-primary/20 px-2 py-1 text-xs"
+                      [value]="item.selectedSize || ''"
+                      (change)="updateSize(item, $any($event.target).value)"
+                    >
+                      <option value="">—</option>
+                      @for (
+                        size of displaySizesFn(
+                          item.product,
+                          item.selectedColorHex ?? ''
+                        );
+                        track size
+                      ) {
+                        <option [value]="size">{{ size }}</option>
+                      }
+                    </select>
+                  }
+                </div>
+              }
               <div class="mt-2 flex flex-wrap items-center gap-1">
                 <button
                   type="button"
                   class="flex h-7 w-7 items-center justify-center rounded-lg border border-primary/20 bg-white transition-colors hover:bg-soft"
-                  (click)="updateQty(item.product.id, item.quantity - 1)"
+                  (click)="updateQty(item, item.quantity - 1)"
                 >
                   <app-hero-icon name="minus" size="16" />
                 </button>
@@ -45,14 +115,24 @@
                 <button
                   type="button"
                   class="flex h-7 w-7 items-center justify-center rounded-lg border border-primary/20 bg-white transition-colors hover:bg-soft"
-                  (click)="updateQty(item.product.id, item.quantity + 1)"
+                  (click)="updateQty(item, item.quantity + 1)"
                 >
                   <app-hero-icon name="plus" size="16" />
                 </button>
+                @if (itemHasOptions(item)) {
+                  <button
+                    type="button"
+                    class="ml-2 inline-flex items-center gap-1 text-sm text-primary/70 hover:text-primary hover:underline"
+                    (click)="toggleEditOptions(item)"
+                  >
+                    <app-hero-icon name="cog-6-tooth" size="16" />
+                    {{ isEditingOptions(item) ? "ألغاء التعديل" : "تعديل" }}
+                  </button>
+                }
                 <button
                   type="button"
                   class="mr-2 inline-flex items-center gap-1 text-sm text-primary/60 hover:text-primary hover:underline"
-                  (click)="remove(item.product.id)"
+                  (click)="remove(item)"
                 >
                   <app-hero-icon name="trash" size="16" />
                   حذف
@@ -72,13 +152,20 @@
         <h2 class="mb-4 text-lg font-semibold text-primary">ملخص الطلب</h2>
 
         <div class="mb-4">
-          <label for="cartCoupon" class="mb-2 block text-sm font-medium text-primary">كود الخصم</label>
+          <label
+            for="cartCoupon"
+            class="mb-2 block text-sm font-medium text-primary"
+            >كود الخصم</label
+          >
           <div class="flex gap-2">
             <input
               id="cartCoupon"
               type="text"
               [value]="couponInput()"
-              (input)="couponInput.set($any($event.target).value); couponDiscount.clearMessage()"
+              (input)="
+                couponInput.set($any($event.target).value);
+                couponDiscount.clearMessage()
+              "
               placeholder="أدخل الكود"
               class="flex-1 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
             />
@@ -95,7 +182,9 @@
             <p class="mt-1.5 text-sm text-accent">تم تطبيق كود الخصم</p>
           }
           @if (couponDiscount.appliedMessage()) {
-            <p class="mt-1.5 text-sm text-red-600">{{ couponDiscount.appliedMessage() }}</p>
+            <p class="mt-1.5 text-sm text-red-600">
+              {{ couponDiscount.appliedMessage() }}
+            </p>
           }
         </div>
 

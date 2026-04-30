@@ -10,6 +10,7 @@ import { OtpService } from '../../core/services/otp.service';
 import { DeliverySettingsService } from '../../core/services/delivery-settings.service';
 import { DiscountService } from '../../core/services/discount.service';
 import { ProductDiscountService } from '../../core/services/product-discount.service';
+import { ProductService } from '../../core/services/product.service';
 import { CartItem } from '../../core/models/product.model';
 import {
   CreateOrderDto,
@@ -22,6 +23,7 @@ import {
   formatAddressLine,
 } from '../../core/models/address.model';
 import { HeroIconComponent } from '../../shared/icons/hero-icon.component';
+import { parseApiErrorMessage } from '../../core/utils/http-error.util';
 
 @Component({
   selector: 'app-checkout',
@@ -44,6 +46,7 @@ export class CheckoutComponent {
   selectedAddressId = signal<string | null>(null);
   useNewAddress = signal(false);
   loadAddressesError = signal('');
+  submitError = signal('');
 
   private fb = inject(FormBuilder);
   phoneForm = this.fb.group({
@@ -88,6 +91,7 @@ export class CheckoutComponent {
   private discountService = inject(DiscountService);
   private router = inject(Router);
   cart = inject(CartService);
+  private productService = inject(ProductService);
 
   constructor() {
     this.defaultDeliveryMessage = this.deliverySettings.getDefaultMessage();
@@ -200,7 +204,11 @@ export class CheckoutComponent {
 
   getPriceInfo(item: CartItem) {
     this.productDiscountService.discounts();
-    return this.productDiscountService.getEffectivePrice(item.product);
+    return this.productDiscountService.getEffectivePrice(item.product, {
+      product_variant_id: item.product_variant_id,
+      selectedColorHex: item.selectedColorHex,
+      selectedSize: item.selectedSize,
+    });
   }
 
   buildScheduledDeliveryISO(): string | undefined {
@@ -216,13 +224,18 @@ export class CheckoutComponent {
   }
 
   submitOrder(): void {
+    this.submitError.set('');
     const phone = (this.phoneForm.get('phone')?.value ?? '').replace(/\D/g, '');
     const fullName = (this.customerForm.get('fullName')?.value ?? '').trim();
     const email = (this.customerForm.get('email')?.value ?? '').trim();
-    const items: CreateOrderItemDto[] = this.cartItems().map((i) => ({
-      product_id: i.product.id,
-      quantity: i.quantity,
-    }));
+    const items: CreateOrderItemDto[] = this.cartItems().map((line) => {
+      const vid = line.product_variant_id?.trim();
+      return {
+        product_id: line.product.id,
+        quantity: line.quantity,
+        ...(vid ? { product_variant_id: vid } : {}),
+      };
+    });
     const coupon_code = this.discountService.appliedCode() || undefined;
     const scheduled_delivery = this.buildScheduledDeliveryISO();
 
@@ -241,10 +254,19 @@ export class CheckoutComponent {
           if (order?.id) {
             this.cart.clear();
             this.discountService.clearAppliedCoupon();
+            this.productService.refresh();
             this.router.navigate(['/order-success', order.id]);
           }
         },
-        error: () => this.submitLoading.set(false),
+        error: (err: unknown) => {
+          this.submitLoading.set(false);
+          const msg = parseApiErrorMessage(err, 'تعذر تأكيد الطلب حالياً');
+          this.submitError.set(
+            /insufficient stock/i.test(msg)
+              ? 'الكمية المطلوبة غير متوفرة حالياً لأحد المنتجات. يرجى تعديل السلة.'
+              : msg,
+          );
+        },
       });
     };
 

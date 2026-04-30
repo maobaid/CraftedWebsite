@@ -5,6 +5,7 @@ export interface Category {
   slug: string;
   parent_id: string | null;
   is_active: boolean;
+  products_count?: number;
 }
 
 /** Slug pattern: lowercase letters, numbers, hyphens only (e.g. my-category-1) */

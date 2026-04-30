@@ -27,6 +27,26 @@
           }
         }
       </select>
+      <label
+        class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-white px-3 py-2 text-sm"
+      >
+        <input
+          type="checkbox"
+          [(ngModel)]="lowStockOnly"
+          (change)="applyStockFilters()"
+          class="rounded"
+        />
+        المخزون المنخفض فقط
+      </label>
+      <input
+        type="number"
+        min="0"
+        class="w-44 rounded-xl border border-primary/20 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent disabled:opacity-60"
+        placeholder="حدّ المخزون المنخفض"
+        [(ngModel)]="lowStockThreshold"
+        [disabled]="!lowStockOnly"
+        (change)="applyStockFilters()"
+      />
     </div>
   </div>
   <div class="flex flex-wrap gap-3">
@@ -90,6 +110,92 @@
           class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium"
+          >الألوان (خيارات المنتج)</label
+        >
+        <div class="flex items-center gap-2">
+          <input
+            type="color"
+            [(ngModel)]="colorPickerValue"
+            class="h-10 w-14 rounded-lg border border-primary/20 bg-white p-1"
+          />
+          <button
+            type="button"
+            class="rounded-xl border border-primary/20 px-3 py-2 text-sm hover:bg-soft"
+            (click)="addColorFromPicker()"
+          >
+            إضافة لون
+          </button>
+        </div>
+        <p class="mt-1 text-xs text-primary/60">
+          يتوافق كل لون مع المقاسات في جدول المتغيرات أدناه؛ أكمِل المخزون وحدّه
+          لكل صف قبل الحفظ.
+        </p>
+        <div class="mt-2 flex flex-wrap gap-2">
+          @for (hex of form.colors; track hex) {
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white px-3 py-1 text-xs"
+              (click)="removeColor(hex)"
+              title="حذف اللون"
+            >
+              <span
+                class="h-4 w-4 rounded-full border border-primary/20"
+                [style.background]="hex"
+              ></span>
+              {{ hex }}
+              ✕
+            </button>
+          }
+        </div>
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium"
+          >المقاسات (خيارات المنتج)</label
+        >
+        <input
+          type="text"
+          [(ngModel)]="form.sizesInput"
+          (blur)="syncVariantsAfterSizesBlur()"
+          placeholder="مثال: S-M-L أو XL"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent"
+        />
+        <p class="mt-1 text-xs text-primary/60">
+          فصل بين المقاسات بشرطة (-). تحدَّث المتغيرات تلقائياً بعد انتهاء تحرير
+          الحقل؛ يُكمّل ذلك قبل الحفظ أيضاً.
+        </p>
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">الكمية بالمخزون</label>
+        <input
+          type="number"
+          [(ngModel)]="form.stock_quantity"
+          min="0"
+          step="1"
+          [disabled]="productLevelStockLocked()"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:bg-primary/5 disabled:opacity-60"
+        />
+      </div>
+      <div>
+        <label class="mb-1 block text-sm font-medium">حد المخزون المنخفض</label>
+        <input
+          type="number"
+          [(ngModel)]="form.low_stock_threshold"
+          min="0"
+          step="1"
+          [disabled]="productLevelStockLocked()"
+          class="w-full rounded-xl border border-primary/20 px-3 py-2 outline-none focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:bg-primary/5 disabled:opacity-60"
+        />
+      </div>
+      @if (productLevelStockLocked()) {
+        <div
+          class="sm:col-span-2 rounded-xl border border-primary/10 bg-soft px-3 py-2 text-xs leading-relaxed text-primary/75"
+        >
+          المخزون وحدّ التنبيه على مستوى مخزون المنتج يُحدَّدان من مجموع
+          المتغيرات.
+        </div>
+      }
       <div class="sm:col-span-2">
         <label class="mb-1 block text-sm font-medium">التصنيف (اختياري)</label>
         <select
@@ -111,6 +217,143 @@
         </label>
       </div>
     </div>
+
+    <div class="mt-8 border-t border-primary/10 pt-6">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-semibold text-primary">
+            المتغيرات (مخزون وسعر خاص)
+          </h3>
+          <p class="mt-1 text-xs text-primary/60">
+            يُنشأ جدول الصفوف تلقائياً من <strong>الألوان</strong> و
+            <strong>المقاسات</strong> أعلاه (كل التوليفات)، ثم تُكمِل مخزون كل
+            صف والسعر الخاص عند الحاجة. احذف كل المتغيرات بالزر عند الحاجة.
+          </p>
+          @if (explicitClearVariants) {
+            <p class="mt-2 text-xs font-medium text-amber-800">
+              ستُمسح المتغيرات عند الحفظ.
+            </p>
+          }
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="rounded-xl border border-primary/20 px-4 py-2 text-sm hover:bg-soft"
+            (click)="addVariantRow()"
+          >
+            + أضف متغير
+          </button>
+          @if (editingId) {
+            <button
+              type="button"
+              class="rounded-xl border border-red-200 px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+              (click)="markClearVariantsOnServer()"
+              [disabled]="explicitClearVariants"
+            >
+              حذف كل المتغيرات
+            </button>
+          }
+        </div>
+      </div>
+      @if (variantRows.length > 0) {
+        <div class="overflow-x-auto rounded-xl border border-primary/15">
+          <table
+            class="w-full min-w-[640px] border-collapse text-right text-sm"
+          >
+            <thead class="bg-primary/5">
+              <tr>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  اللون
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  المقاس
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  سعر خاص (د.ك)
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  الكمية
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  حد منخفض
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  مفعّل
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of variantRows; track $index) {
+                <tr class="border-b border-primary/10 last:border-0">
+                  <td class="p-2 align-middle">
+                    <input
+                      type="color"
+                      class="h-9 w-[3.25rem] cursor-pointer rounded-md border border-primary/15 bg-white p-1"
+                      [value]="pickerHexForVariantColor(row.color)"
+                      (input)="
+                        setVariantRowColor($index, $any($event.target).value)
+                      "
+                      title="اختر اللون (HEX)"
+                    />
+                  </td>
+                  <td class="p-2 align-middle">
+                    <input
+                      type="text"
+                      [(ngModel)]="row.size"
+                      placeholder="مقاس"
+                      class="w-full min-w-[80px] rounded-lg border border-primary/15 px-2 py-1.5 outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </td>
+                  <td class="p-2 align-middle">
+                    <input
+                      type="text"
+                      inputmode="decimal"
+                      [(ngModel)]="row.price_override"
+                      placeholder="فارغ = سعر المنتج"
+                      class="w-full min-w-[96px] rounded-lg border border-primary/15 px-2 py-1.5 outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </td>
+                  <td class="p-2 align-middle">
+                    <input
+                      type="number"
+                      min="0"
+                      [(ngModel)]="row.stock_quantity"
+                      class="w-20 rounded-lg border border-primary/15 px-2 py-1.5 outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </td>
+                  <td class="p-2 align-middle">
+                    <input
+                      type="number"
+                      min="0"
+                      [(ngModel)]="row.low_stock_threshold"
+                      class="w-20 rounded-lg border border-primary/15 px-2 py-1.5 outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </td>
+                  <td class="p-2 align-middle text-center">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="row.is_active"
+                      class="rounded"
+                    />
+                  </td>
+                  <td class="p-2 align-middle">
+                    <button
+                      type="button"
+                      class="rounded-lg px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                      (click)="removeVariantRow($index)"
+                    >
+                      حذف
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
     <div class="mt-6 flex justify-end gap-3">
       <button
         type="button"
@@ -148,6 +391,7 @@
           <th class="p-3 font-semibold">الاسم</th>
           <th class="p-3 font-semibold">التصنيف</th>
           <th class="p-3 font-semibold">السعر</th>
+          <th class="p-3 font-semibold">المخزون</th>
           <th class="p-3 font-semibold">الحالة</th>
           <th class="p-3 font-semibold">إجراءات</th>
         </tr>
@@ -178,6 +422,27 @@
             <td class="p-3">{{ p.title }}</td>
             <td class="p-3">{{ getCategoryName(p.category_id) }}</td>
             <td class="p-3">{{ p.price }} د.ك</td>
+            <td class="p-3">
+              <div class="flex flex-wrap items-center gap-2">
+                <span>{{ p.stock_quantity }}</span>
+                <span
+                  class="rounded-full px-2 py-0.5 text-xs"
+                  [class.bg-green-100]="p.in_stock"
+                  [class.text-green-700]="p.in_stock"
+                  [class.bg-red-100]="!p.in_stock"
+                  [class.text-red-700]="!p.in_stock"
+                >
+                  {{ p.in_stock ? "متوفر" : "غير متوفر" }}
+                </span>
+                @if (p.in_stock && p.is_low_stock) {
+                  <span
+                    class="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800"
+                  >
+                    مخزون منخفض
+                  </span>
+                }
+              </div>
+            </td>
             <td class="p-3">{{ p.is_active ? "مفعّل" : "معطّل" }}</td>
             <td class="p-3">
               <button
@@ -199,13 +464,13 @@
         } @empty {
           @if (productService.allProducts().length === 0) {
             <tr>
-              <td colspan="7" class="p-6 text-center text-primary/60">
+              <td colspan="8" class="p-6 text-center text-primary/60">
                 لا توجد منتجات. أضف منتجاً من الزر أعلاه.
               </td>
             </tr>
           } @else {
             <tr>
-              <td colspan="7" class="p-6 text-center text-primary/60">
+              <td colspan="8" class="p-6 text-center text-primary/60">
                 لا توجد منتجات مطابقة للبحث أو التصفيات الحالية.
               </td>
             </tr>
