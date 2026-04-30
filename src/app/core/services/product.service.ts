@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Product } from '../models/product.model';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 /** API response for GET /stores/{storeId}/products */
 interface ProductsListResponse {
@@ -30,7 +31,7 @@ export class ProductService {
 
   private getStoreId(): string | null {
     const user = this.auth.user();
-    return user?.store_id ?? null;
+    return user?.store_id ?? environment.storeId;
   }
 
   private getAuthHeaders(required = false): { headers?: HttpHeaders } {

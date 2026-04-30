@@ -82,3 +82,9 @@ export interface OrderResponse {
   created_at?: string;
   updated_at?: string;
 }
+
+/** Response payload from POST /stores/:storeId/orders/:orderId/receipt/resend. */
+export interface ResendOrderReceiptResponse {
+  message?: string;
+  status?: string;
+}

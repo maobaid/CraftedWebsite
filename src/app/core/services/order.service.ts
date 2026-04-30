@@ -1,12 +1,13 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, forkJoin } from 'rxjs';
+import { Observable, of, forkJoin, throwError, firstValueFrom } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import {
   Order,
   OrderStatus,
   OrderResponse,
   CreateOrderDto,
+  ResendOrderReceiptResponse,
 } from '../models/order.model';
 import { Customer } from '../models/customer.model';
 import { AuthService } from './auth.service';
@@ -15,6 +16,7 @@ import { ProductService } from './product.service';
 import { CartItem, Product } from '../models/product.model';
 import { Address, formatAddressLine } from '../models/address.model';
 import { environment } from '../../../environments/environment';
+import { parseApiErrorMessage } from '../utils/http-error.util';
 const ORDERS_KEY = 'crafted_orders';
 const CUSTOMERS_KEY = 'crafted_customers';
 
@@ -197,6 +199,47 @@ export class OrderService {
         next: () => this.refreshOrders(),
         error: () => {},
       });
+  }
+
+  resendOrderReceipt(
+    storeId: string,
+    orderId: string,
+  ): Promise<ResendOrderReceiptResponse> {
+    return firstValueFrom(
+      this.http
+        .post<ResendOrderReceiptResponse>(
+          `/stores/${storeId}/orders/${orderId}/receipt/resend`,
+          {},
+          this.getAuthHeaders(),
+        )
+        .pipe(
+          catchError((err: unknown) =>
+            throwError(
+              () =>
+                new Error(
+                  parseApiErrorMessage(err, 'فشل إعادة إرسال الإيصال عبر واتساب'),
+                ),
+            ),
+          ),
+        ),
+    );
+  }
+
+  downloadOrderReceipt(storeId: string, orderId: string): Promise<Blob> {
+    return firstValueFrom(
+      this.http
+        .get(`/stores/${storeId}/orders/${orderId}/receipt`, {
+          ...this.getAuthHeaders(),
+          responseType: 'blob',
+        })
+        .pipe(
+          catchError((err: unknown) =>
+            throwError(
+              () => new Error(parseApiErrorMessage(err, 'فشل تحميل ملف الإيصال')),
+            ),
+          ),
+        ),
+    );
   }
 
   createOrder(order: Omit<Order, 'id' | 'createdAt'>): Order {

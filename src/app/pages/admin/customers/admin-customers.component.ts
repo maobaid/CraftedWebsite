@@ -28,7 +28,8 @@ export class AdminCustomersComponent implements OnInit {
   loading = signal(true);
   loadError = signal('');
   editingId: string | null = null;
-  editForm = { fullName: '', email: '', address: '' };
+  editForm = { fullName: '', email: '', phone: '' };
+  saveError = signal('');
   saving = signal(false);
   /** Expanded row: show details (addresses, orders). */
   expandedId = signal<string | null>(null);
@@ -82,36 +83,52 @@ export class AdminCustomersComponent implements OnInit {
 
   openEdit(c: AdminCustomerRow): void {
     this.editingId = c.id;
+    this.saveError.set('');
     this.editForm = {
       fullName: c.fullName,
       email: c.email ?? '',
-      address: c.address ?? '',
+      phone: c.phone ?? '',
     };
   }
 
   saveEdit(): void {
     const id = this.editingId;
     if (!id) return;
+    const fullName = this.editForm.fullName.trim();
+    const phone = this.editForm.phone.trim();
+    if (!fullName || !phone) {
+      this.saveError.set('الاسم ورقم الهاتف مطلوبان');
+      return;
+    }
+    this.saveError.set('');
     this.saving.set(true);
     this.storeCustomer
       .updateCustomer(id, {
-        full_name: this.editForm.fullName.trim() || undefined,
+        full_name: fullName,
+        phone_number: phone,
         email: this.editForm.email.trim() || undefined,
       })
       .subscribe({
         next: (updated) => {
           this.saving.set(false);
-          this.editingId = null;
-          if (updated) this.loadCustomers();
+          if (updated) {
+            this.editingId = null;
+            this.saveError.set('');
+            this.loadCustomers();
+            return;
+          }
+          this.saveError.set('فشل حفظ بيانات العميل');
         },
         error: () => {
           this.saving.set(false);
+          this.saveError.set('فشل حفظ بيانات العميل');
         },
       });
   }
 
   cancelEdit(): void {
     this.editingId = null;
+    this.saveError.set('');
   }
 
   getOrdersForCustomer(c: AdminCustomerRow): number {

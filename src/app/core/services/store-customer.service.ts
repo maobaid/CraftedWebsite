@@ -98,7 +98,7 @@ export class StoreCustomerService {
    */
   updateCustomer(
     customerId: string,
-    dto: Partial<{ full_name: string; email: string }>,
+    dto: Partial<{ full_name: string; email: string; phone_number: string }>,
   ): Observable<StoreCustomerResponse | null> {
     const storeId = this.getStoreId();
     if (!storeId) return of(null);

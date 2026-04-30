@@ -1,5 +1,19 @@
 <h1 class="mb-6 text-2xl font-semibold text-primary">إدارة الطلبات</h1>
 
+@if (toasts().length > 0) {
+  <div class="fixed left-4 top-4 z-50 space-y-2">
+    @for (toast of toasts(); track toast.id) {
+      <div
+        class="rounded-xl px-4 py-2 text-sm text-white shadow-lg"
+        [class.bg-green-600]="toast.type === 'success'"
+        [class.bg-red-600]="toast.type === 'error'"
+      >
+        {{ toast.message }}
+      </div>
+    }
+  </div>
+}
+
 <div class="mb-6 flex flex-wrap items-center gap-4">
   <div class="flex items-between justify-between w-full">
     <input
@@ -82,24 +96,52 @@
   @for (order of orders(); track order.id) {
     <div class="rounded-2xl bg-white p-5 shadow-lg">
       <div
-        class="mb-4 flex flex-wrap items-center gap-4 border-b border-primary/10 pb-3"
+        class="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-primary/10 pb-3"
       >
-        <span class="font-semibold">#{{ order.id.slice(0, 8) }}</span>
-        <span class="text-sm text-primary/60">{{
-          order.createdAt | date: "medium"
-        }}</span>
-        <span
-          class="rounded-full px-3 py-1 text-sm font-medium"
-          [class.bg-amber-100]="order.status === 'PENDING'"
-          [class.text-amber-800]="order.status === 'PENDING'"
-          [class.bg-blue-100]="order.status === 'CONFIRMED'"
-          [class.text-blue-800]="order.status === 'CONFIRMED'"
-          [class.bg-cyan-100]="order.status === 'SHIPPED'"
-          [class.text-cyan-800]="order.status === 'SHIPPED'"
-          [class.bg-green-100]="order.status === 'DELIVERED'"
-          [class.text-green-800]="order.status === 'DELIVERED'"
-          >{{ statusLabel(order.status) }}</span
-        >
+        <div class="flex flex-wrap items-center gap-4">
+          <span class="font-semibold">#{{ order.id.slice(0, 8) }}</span>
+          <span class="text-sm text-primary/60">{{
+            order.createdAt | date: "medium"
+          }}</span>
+          <span
+            class="rounded-full px-3 py-1 text-sm font-medium"
+            [class.bg-amber-100]="order.status === 'PENDING'"
+            [class.text-amber-800]="order.status === 'PENDING'"
+            [class.bg-blue-100]="order.status === 'CONFIRMED'"
+            [class.text-blue-800]="order.status === 'CONFIRMED'"
+            [class.bg-cyan-100]="order.status === 'SHIPPED'"
+            [class.text-cyan-800]="order.status === 'SHIPPED'"
+            [class.bg-green-100]="order.status === 'DELIVERED'"
+            [class.text-green-800]="order.status === 'DELIVERED'"
+            >{{ statusLabel(order.status) }}</span
+          >
+        </div>
+        @if (canManageReceipts) {
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-white px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-soft disabled:cursor-not-allowed disabled:opacity-60"
+              [disabled]="isDownloadingReceipt(order.id)"
+              (click)="downloadReceipt(order.id)"
+            >
+              <app-hero-icon name="arrow-down-tray" size="18" />
+              {{ isDownloadingReceipt(order.id) ? "جاري التنزيل..." : "Download Receipt" }}
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
+              [disabled]="isResendingReceipt(order.id)"
+              (click)="resendReceipt(order.id)"
+            >
+              <app-hero-icon name="paper-airplane" size="18" />
+              {{
+                isResendingReceipt(order.id)
+                  ? "جاري الإرسال..."
+                  : "Resend via WhatsApp"
+              }}
+            </button>
+          </div>
+        }
       </div>
       <div class="space-y-1 text-sm">
         <p>
@@ -166,6 +208,30 @@
         >
           طباعة إيصال
         </button>
+        @if (canManageReceipts) {
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-soft disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="isDownloadingReceipt(order.id)"
+            (click)="downloadReceipt(order.id)"
+          >
+            <app-hero-icon name="arrow-down-tray" size="18" />
+            {{ isDownloadingReceipt(order.id) ? "جاري التنزيل..." : "Download Receipt" }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="isResendingReceipt(order.id)"
+            (click)="resendReceipt(order.id)"
+          >
+            <app-hero-icon name="paper-airplane" size="18" />
+            {{
+              isResendingReceipt(order.id)
+                ? "جاري الإرسال..."
+                : "Resend via WhatsApp"
+            }}
+          </button>
+        }
       </div>
     </div>
   } @empty {

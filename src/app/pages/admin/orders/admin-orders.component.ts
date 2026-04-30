@@ -6,6 +6,16 @@ import { Order, OrderStatus } from '../../../core/models/order.model';
 import { getProductPrice } from '../../../core/models/product.model';
 import { DEFAULT_PRODUCT_IMAGE } from '../../../core/models/product.model';
 import { HeroIconComponent } from '../../../shared/icons/hero-icon.component';
+import { AuthService } from '../../../core/services/auth.service';
+import { parseApiErrorMessage } from '../../../core/utils/http-error.util';
+import { triggerPdfDownload } from '../../../core/utils/file-download.util';
+
+type ToastType = 'success' | 'error';
+interface ToastMessage {
+  id: number;
+  message: string;
+  type: ToastType;
+}
 
 @Component({
   selector: 'app-admin-orders',
@@ -21,6 +31,11 @@ export class AdminOrdersComponent implements OnInit {
 
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private auth = inject(AuthService);
+  private toastCounter = 0;
+  receiptResendLoading = signal<Record<string, boolean>>({});
+  receiptDownloadLoading = signal<Record<string, boolean>>({});
+  toasts = signal<ToastMessage[]>([]);
 
   orders = computed(() => {
     let all = this.orderService.orders();
@@ -62,6 +77,10 @@ export class AdminOrdersComponent implements OnInit {
   }
 
   getProductPrice = getProductPrice;
+  get canManageReceipts(): boolean {
+    const role = (this.auth.user()?.role ?? '').toUpperCase();
+    return role === 'STORE_ADMIN' || role === 'STORE_MANAGER';
+  }
 
   setFilter(s: OrderStatus | 'all'): void {
     this.statusFilter.set(s);
@@ -84,6 +103,78 @@ export class AdminOrdersComponent implements OnInit {
   readonly storeName = 'متجر كرافتد';
   readonly storeLogoPath = '/logo.PNG';
   readonly defaultProductImage = DEFAULT_PRODUCT_IMAGE;
+
+  private getStoreId(): string | null {
+    return this.auth.user()?.store_id ?? null;
+  }
+
+  private setOrderActionLoading(
+    source: typeof this.receiptDownloadLoading | typeof this.receiptResendLoading,
+    orderId: string,
+    loading: boolean,
+  ): void {
+    source.update((state) => ({
+      ...state,
+      [orderId]: loading,
+    }));
+  }
+
+  isResendingReceipt(orderId: string): boolean {
+    return !!this.receiptResendLoading()[orderId];
+  }
+
+  isDownloadingReceipt(orderId: string): boolean {
+    return !!this.receiptDownloadLoading()[orderId];
+  }
+
+  private showToast(message: string, type: ToastType): void {
+    const id = ++this.toastCounter;
+    this.toasts.update((list) => [...list, { id, message, type }]);
+    setTimeout(() => {
+      this.toasts.update((list) => list.filter((t) => t.id !== id));
+    }, 3500);
+  }
+
+  async resendReceipt(orderId: string): Promise<void> {
+    const storeId = this.getStoreId();
+    if (!storeId) {
+      this.showToast('تعذر تحديد المتجر لهذا الحساب', 'error');
+      return;
+    }
+    this.setOrderActionLoading(this.receiptResendLoading, orderId, true);
+    try {
+      const res = await this.orderService.resendOrderReceipt(storeId, orderId);
+      this.showToast(
+        res.message?.trim() || 'Receipt resent successfully',
+        'success',
+      );
+    } catch (err) {
+      this.showToast(
+        parseApiErrorMessage(err, 'فشل إعادة إرسال الإيصال عبر واتساب'),
+        'error',
+      );
+    } finally {
+      this.setOrderActionLoading(this.receiptResendLoading, orderId, false);
+    }
+  }
+
+  async downloadReceipt(orderId: string): Promise<void> {
+    const storeId = this.getStoreId();
+    if (!storeId) {
+      this.showToast('تعذر تحديد المتجر لهذا الحساب', 'error');
+      return;
+    }
+    this.setOrderActionLoading(this.receiptDownloadLoading, orderId, true);
+    try {
+      const blob = await this.orderService.downloadOrderReceipt(storeId, orderId);
+      triggerPdfDownload(blob, `receipt-${orderId}.pdf`);
+      this.showToast('تم تنزيل الإيصال بنجاح', 'success');
+    } catch (err) {
+      this.showToast(parseApiErrorMessage(err, 'فشل تنزيل الإيصال'), 'error');
+    } finally {
+      this.setOrderActionLoading(this.receiptDownloadLoading, orderId, false);
+    }
+  }
 
   printReceipt(order: Order): void {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
