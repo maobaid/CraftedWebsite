@@ -10,6 +10,7 @@ import {
   findMatchingVariant,
   isVariantSelectable,
   productHasVariants,
+  sortedProductCustomizations,
   variantColorSelectable,
   variantSizeSelectable,
 } from '../../core/models/product.model';
@@ -70,6 +71,10 @@ export class ProductCardComponent {
     return !variantSizeSelectable(p, size, this.selectedColorHex);
   }
 
+  requiresCustomizationOnPdp(p: Product): boolean {
+    return sortedProductCustomizations(p).length > 0;
+  }
+
   resolvedVariantForUi(p: Product): ProductVariant | null {
     if (!productHasVariants(p)) return null;
     return findMatchingVariant(p, this.selectedColorHex, this.selectedSize);
@@ -86,7 +91,8 @@ export class ProductCardComponent {
     );
   }
 
-  canAddLine(p: Product): boolean {
+  canQuickAddToCart(p: Product): boolean {
+    if (this.requiresCustomizationOnPdp(p)) return false;
     if (productHasVariants(p)) {
       const v = findMatchingVariant(p, this.selectedColorHex, this.selectedSize);
       return v !== null && isVariantSelectable(v);
@@ -98,6 +104,7 @@ export class ProductCardComponent {
   }
 
   addToCart(p: Product): void {
+    if (this.requiresCustomizationOnPdp(p)) return;
     if (productHasVariants(p)) {
       const cols = displayColors(p);
       const szs = displaySizes(p, this.selectedColorHex);

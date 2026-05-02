@@ -11,10 +11,14 @@ import { DeliverySettingsService } from '../../core/services/delivery-settings.s
 import { DiscountService } from '../../core/services/discount.service';
 import { ProductDiscountService } from '../../core/services/product-discount.service';
 import { ProductService } from '../../core/services/product.service';
-import { CartItem } from '../../core/models/product.model';
+import {
+  CartItem,
+  customizationOptionLabel,
+} from '../../core/models/product.model';
 import {
   CreateOrderDto,
   CreateOrderItemDto,
+  CreateOrderLineCustomizationDto,
 } from '../../core/models/order.model';
 import { StoreCustomerResponse } from '../../core/models/customer.model';
 import {
@@ -106,6 +110,7 @@ export class CheckoutComponent {
   canProceedFromStep1 = computed(() => this.phoneVerified());
 
   formatAddressLine = formatAddressLine;
+  readonly customizationOptionLabelFn = customizationOptionLabel;
 
   sendOtp(): void {
     const phone = this.phoneForm.get('phone')?.value?.trim();
@@ -211,6 +216,10 @@ export class CheckoutComponent {
     });
   }
 
+  lineKey(item: CartItem): string {
+    return this.cart.lineKey(item);
+  }
+
   buildScheduledDeliveryISO(): string | undefined {
     const delivery = this.deliveryForm.value;
     if (!delivery.scheduleDelivery || !delivery.date) return undefined;
@@ -230,10 +239,31 @@ export class CheckoutComponent {
     const email = (this.customerForm.get('email')?.value ?? '').trim();
     const items: CreateOrderItemDto[] = this.cartItems().map((line) => {
       const vid = line.product_variant_id?.trim();
+      const customizations: CreateOrderLineCustomizationDto[] | undefined =
+        line.customizations?.length
+          ? line.customizations
+              .map((c) => {
+                if (c.text_value != null && c.text_value !== '') {
+                  return {
+                    product_customization_id: c.product_customization_id,
+                    text_value: c.text_value,
+                  } as CreateOrderLineCustomizationDto;
+                }
+                if (c.image_url != null && c.image_url !== '') {
+                  return {
+                    product_customization_id: c.product_customization_id,
+                    image_url: c.image_url,
+                  } as CreateOrderLineCustomizationDto;
+                }
+                return null;
+              })
+              .filter((x): x is CreateOrderLineCustomizationDto => x != null)
+          : undefined;
       return {
         product_id: line.product.id,
         quantity: line.quantity,
         ...(vid ? { product_variant_id: vid } : {}),
+        ...(customizations?.length ? { customizations } : {}),
       };
     });
     const coupon_code = this.discountService.appliedCode() || undefined;

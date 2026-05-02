@@ -3,6 +3,7 @@ import { NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
   CartItem,
+  customizationOptionLabel,
   displayColors,
   displaySizes,
 } from '../../core/models/product.model';
@@ -31,6 +32,7 @@ export class CartComponent {
 
   readonly displayColorsFn = displayColors;
   readonly displaySizesFn = displaySizes;
+  readonly customizationOptionLabelFn = customizationOptionLabel;
 
   couponAmount = computed(() =>
     this.couponDiscount.getAppliedDiscountAmount(this.subtotal())
@@ -40,9 +42,7 @@ export class CartComponent {
   );
 
   itemKey(item: CartItem): string {
-    const vid = item.product_variant_id?.trim();
-    if (vid) return `${item.product.id}::v:${vid}`;
-    return `${item.product.id}::${item.selectedColorHex ?? ''}::${item.selectedSize ?? ''}`;
+    return this.cartService.lineKey(item);
   }
 
   isEditingOptions(item: CartItem): boolean {

@@ -175,16 +175,36 @@
           <strong>المجموع الفرعي:</strong> {{ order.subtotal.toFixed(2) }} د.ك
         </p>
         <p><strong>الإجمالي:</strong> {{ order.total.toFixed(2) }} د.ك</p>
-        <div class="mt-2 flex flex-wrap gap-2 items-center">
-          @for (item of order.items; track item.product.id) {
+        <div class="mt-2 flex flex-wrap gap-2 items-start">
+          @for (item of order.items; track $index) {
             <img
               [src]="item.product.image_url || defaultProductImage"
               [alt]="item.product.title || 'صورة المنتج'"
-              class="w-10 h-10 object-cover rounded-lg"
+              class="w-10 h-10 shrink-0 object-cover rounded-lg"
             />
-            <span class="rounded-lg bg-soft px-2 py-1 text-xs"
-              >{{ item.product.title }} × {{ item.quantity }}</span
-            >
+            <span class="inline-flex max-w-xs flex-col rounded-lg bg-soft px-2 py-1 text-xs leading-snug">
+              <span>{{ item.product.title }} × {{ item.quantity }}</span>
+              @if (item.customization_values?.length) {
+                @for (cv of item.customization_values; track $index) {
+                  <span class="mt-0.5 border-t border-primary/10 pt-0.5 text-[11px] text-primary/65 first:mt-0 first:border-0 first:pt-0">
+                    @if (cv.label_snapshot) {
+                      {{ cv.label_snapshot }}:
+                    }
+                    @if (cv.kind?.toUpperCase() === 'IMAGE' && cv.image_url) {
+                      <a
+                        [href]="cv.image_url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-accent underline underline-offset-2"
+                        >صورة</a
+                      >
+                    } @else if (cv.text_value) {
+                      {{ cv.text_value }}
+                    }
+                  </span>
+                }
+              }
+            </span>
           }
         </div>
       </div>

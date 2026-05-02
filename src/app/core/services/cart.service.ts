@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import {
   CartItem,
+  CartLineCustomization,
   findMatchingVariant,
   productHasVariants,
 } from '../models/product.model';
@@ -46,15 +47,70 @@ export class CartService {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   }
 
+  /**
+   * Merge key for duplicate lines — variant + color/size + customization payload.
+   */
+  lineKey(item: CartItem): string {
+    return this.getItemKey(item);
+  }
+
+  private normalizeLineCustomizations(
+    rows: CartLineCustomization[] | undefined,
+  ): CartLineCustomization[] | undefined {
+    if (!rows?.length) return undefined;
+    const mapped = rows
+      .map((r) => {
+        const id = r.product_customization_id?.trim();
+        if (!id) return null;
+        if (r.text_value != null && r.text_value !== '') {
+          return {
+            product_customization_id: id,
+            text_value: r.text_value.trim(),
+          } as CartLineCustomization;
+        }
+        if (r.image_url != null && r.image_url !== '') {
+          return {
+            product_customization_id: id,
+            image_url: r.image_url.trim(),
+          } as CartLineCustomization;
+        }
+        return null;
+      })
+      .filter((x): x is CartLineCustomization => x != null);
+    if (!mapped.length) return undefined;
+    return [...mapped].sort((a, b) =>
+      a.product_customization_id.localeCompare(b.product_customization_id),
+    );
+  }
+
+  private customizationKeyPart(
+    c: CartLineCustomization[] | undefined,
+  ): string {
+    if (!c?.length) return '';
+    return c
+      .map(
+        (row) =>
+          `${row.product_customization_id}:${row.text_value ?? ''}:${row.image_url ?? ''}`,
+      )
+      .join('|');
+  }
+
   private getItemKey(
     item: Pick<
       CartItem,
-      'product' | 'selectedColorHex' | 'selectedSize' | 'product_variant_id'
+      | 'product'
+      | 'selectedColorHex'
+      | 'selectedSize'
+      | 'product_variant_id'
+      | 'customizations'
     >,
   ): string {
     const vid = item.product_variant_id?.trim();
-    if (vid) return `${item.product.id}::v:${vid}`;
-    return `${item.product.id}::${item.selectedColorHex ?? ''}::${item.selectedSize ?? ''}`;
+    const base = vid
+      ? `${item.product.id}::v:${vid}`
+      : `${item.product.id}::${item.selectedColorHex ?? ''}::${item.selectedSize ?? ''}`;
+    const cPart = this.customizationKeyPart(item.customizations);
+    return cPart ? `${base}::c:${cPart}` : base;
   }
 
   private resolveVariantId(
@@ -82,6 +138,7 @@ export class CartService {
       selectedColorHex?: string;
       selectedSize?: string;
       product_variant_id?: string;
+      customizations?: CartLineCustomization[];
     },
   ): void {
     const items = [...this.cartSignal()];
@@ -92,12 +149,16 @@ export class CartService {
       selectedColorHex,
       selectedSize,
     });
+    const customizations = this.normalizeLineCustomizations(
+      options?.customizations,
+    );
     const newItem: CartItem = {
       product,
       quantity,
       selectedColorHex,
       selectedSize,
       product_variant_id,
+      ...(customizations?.length ? { customizations } : {}),
     };
     const newKey = this.getItemKey(newItem);
     const idx = items.findIndex((i) => this.getItemKey(i) === newKey);

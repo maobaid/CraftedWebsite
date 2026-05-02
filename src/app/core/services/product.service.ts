@@ -6,6 +6,8 @@ import {
   Product,
   ProductVariant,
   ProductVariantInput,
+  ProductCustomization,
+  ProductCustomizationInputRow,
   parseNonNegativeProductPrice,
 } from '../models/product.model';
 import { AuthService } from './auth.service';
@@ -28,15 +30,17 @@ export interface ProductListFilters {
 /** POST body — excludes read-only/top-level computed fields */
 export type ProductCreatePayload = Omit<
   Product,
-  'id' | 'in_stock' | 'is_low_stock' | 'variants'
+  'id' | 'in_stock' | 'is_low_stock' | 'variants' | 'customizations'
 > & {
   variants?: ProductVariantInput[];
+  customizations?: ProductCustomizationInputRow[];
 };
 
 export type ProductUpdatePayload = Partial<
-  Omit<Product, 'id' | 'in_stock' | 'is_low_stock' | 'variants'>
+  Omit<Product, 'id' | 'in_stock' | 'is_low_stock' | 'variants' | 'customizations'>
 > & {
   variants?: ProductVariantInput[];
+  customizations?: ProductCustomizationInputRow[];
 };
 
 @Injectable({ providedIn: 'root' })
@@ -193,9 +197,52 @@ export class ProductService {
   }
 }
 
+function normalizeCustomization(c: Partial<ProductCustomization>): ProductCustomization {
+  const kind: ProductCustomization['kind'] =
+    c.kind === 'IMAGE' ? 'IMAGE' : 'TEXT';
+  const sort_order =
+    typeof c.sort_order === 'number' && Number.isFinite(c.sort_order)
+      ? c.sort_order
+      : 0;
+  let max_chars: number | null = null;
+  let text_mode: ProductCustomization['text_mode'] = null;
+  if (kind === 'TEXT') {
+    const mc =
+      typeof c.max_chars === 'number' && Number.isFinite(c.max_chars)
+        ? Math.max(1, Math.floor(c.max_chars))
+        : 80;
+    max_chars = mc;
+    text_mode =
+      c.text_mode === 'SINGLE_WORD' ? 'SINGLE_WORD' : 'SENTENCE';
+  }
+  return {
+    id: c.id ? String(c.id).trim() : '',
+    label: (c.label ?? '').trim(),
+    sort_order,
+    kind,
+    required: c.required === true,
+    max_chars,
+    text_mode,
+  };
+}
+
 function normalizeProduct(p: Product): Product {
   const variants: ProductVariant[] = Array.isArray(p.variants)
     ? p.variants.map(normalizeVariant)
+    : [];
+  const customizations: ProductCustomization[] = Array.isArray(
+    (p as { customizations?: unknown }).customizations,
+  )
+    ? ((p as { customizations?: ProductCustomization[] }).customizations ??
+        [])
+        .map((x) =>
+          normalizeCustomization(
+            typeof x === 'object' && x !== null
+              ? (x as ProductCustomization)
+              : {},
+          ),
+        )
+        .filter((c) => c.id !== '')
     : [];
   const stockQty =
     typeof p.stock_quantity === 'number' && Number.isFinite(p.stock_quantity)
@@ -212,6 +259,8 @@ function normalizeProduct(p: Product): Product {
     colors: Array.isArray(p.colors) ? p.colors : [],
     sizes: Array.isArray(p.sizes) ? p.sizes : [],
     variants,
+    customizations:
+      customizations.length > 0 ? customizations : undefined,
     stock_quantity: stockQty,
     low_stock_threshold: threshold,
     in_stock: typeof p.in_stock === 'boolean' ? p.in_stock : stockQty > 0,
@@ -276,6 +325,32 @@ function toProductVariantInputBody(
   return row;
 }
 
+function toCustomizationPayloadBody(
+  row: ProductCustomizationInputRow,
+  indexFallback: number,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {
+    label: String(row.label ?? '').trim(),
+    kind: row.kind === 'IMAGE' ? 'IMAGE' : 'TEXT',
+    required: row.required === true,
+    sort_order:
+      typeof row.sort_order === 'number' && Number.isFinite(row.sort_order)
+        ? row.sort_order
+        : indexFallback,
+  };
+  if (row.id?.trim()) out['id'] = row.id.trim();
+  if (row.kind === 'TEXT') {
+    const mc =
+      typeof row.max_chars === 'number' && Number.isFinite(row.max_chars)
+        ? Math.max(1, Math.floor(row.max_chars))
+        : 80;
+    out['max_chars'] = mc;
+    out['text_mode'] =
+      row.text_mode === 'SINGLE_WORD' ? 'SINGLE_WORD' : 'SENTENCE';
+  }
+  return out;
+}
+
 function toProductUpdatePayload(
   updates: ProductUpdatePayload,
 ): Record<string, unknown> {
@@ -296,6 +371,11 @@ function toProductUpdatePayload(
   if (updates.is_active !== undefined) payload['is_active'] = updates.is_active;
   if (updates.variants !== undefined) {
     payload['variants'] = updates.variants.map(toProductVariantInputBody);
+  }
+  if (updates.customizations !== undefined) {
+    payload['customizations'] = updates.customizations.map((row, i) =>
+      toCustomizationPayloadBody(row, i),
+    );
   }
   return payload;
 }

@@ -20,6 +20,38 @@ export interface ProductVariantInput {
   is_active?: boolean;
 }
 
+export type ProductCustomizationKind = 'TEXT' | 'IMAGE';
+export type ProductTextMode = 'SINGLE_WORD' | 'SENTENCE';
+
+/** Returned with product list/get/create/update (normalized client-side). */
+export interface ProductCustomization {
+  id: string;
+  label: string;
+  sort_order: number;
+  kind: ProductCustomizationKind;
+  required: boolean;
+  max_chars: number | null;
+  text_mode: ProductTextMode | null;
+}
+
+/** Row for create/update product (optional id for existing customization). */
+export interface ProductCustomizationInputRow {
+  id?: string;
+  label: string;
+  kind: ProductCustomizationKind;
+  required?: boolean;
+  sort_order?: number;
+  max_chars?: number | null;
+  text_mode?: ProductTextMode | null;
+}
+
+/** Per checkout line — TEXT lines send text_value only; IMAGE send image_url only. */
+export interface CartLineCustomization {
+  product_customization_id: string;
+  text_value?: string;
+  image_url?: string;
+}
+
 export interface Product {
   id: string;
   category_id: string | null;
@@ -35,10 +67,21 @@ export interface Product {
   in_stock: boolean;
   is_low_stock: boolean;
   variants: ProductVariant[];
+  customizations?: ProductCustomization[];
 }
 
 export const DEFAULT_PRODUCT_IMAGE =
   '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG';
+
+/** Snapshot from order API for past orders / receipts. */
+export interface OrderCustomizationValueSnapshot {
+  product_customization_id?: string;
+  label_snapshot?: string;
+  kind?: string;
+  text_mode?: string | null;
+  text_value?: string | null;
+  image_url?: string | null;
+}
 
 export interface CartItem {
   product: Product;
@@ -47,10 +90,61 @@ export interface CartItem {
   product_variant_id?: string;
   selectedColorHex?: string;
   selectedSize?: string;
+  /** Customer selections while cart is pending checkout. */
+  customizations?: CartLineCustomization[];
+  /** Populated when order line is loaded from API. */
+  customization_values?: OrderCustomizationValueSnapshot[];
 }
 
 export function normalizeColorKey(c: string | null | undefined): string {
   return (c ?? '').trim().toLowerCase();
+}
+
+export function sortedProductCustomizations(
+  product: Pick<Product, 'customizations'> | undefined | null,
+): ProductCustomization[] {
+  const raw = product?.customizations;
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  return [...raw].sort((a, b) => {
+    const oa =
+      typeof a.sort_order === 'number' && Number.isFinite(a.sort_order)
+        ? a.sort_order
+        : 0;
+    const ob =
+      typeof b.sort_order === 'number' && Number.isFinite(b.sort_order)
+        ? b.sort_order
+        : 0;
+    return oa - ob || a.label.localeCompare(b.label);
+  });
+}
+
+/** Valid public image URL for order payload (http or https). */
+export function isValidHttpProductImageUrl(u: string): boolean {
+  const s = u.trim();
+  if (!s) return false;
+  try {
+    const x = new URL(s);
+    return (
+      (x.protocol === 'https:' || x.protocol === 'http:') && !!x.hostname
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function sanitizeSingleWordText(value: string): string {
+  return value.replace(/\s+/g, '');
+}
+
+/** Label for a cart/checkout line from `product.customizations` by id. */
+export function customizationOptionLabel(
+  product: Pick<Product, 'customizations'> | undefined,
+  productCustomizationId: string | undefined | null,
+): string {
+  const id = (productCustomizationId ?? '').trim();
+  if (!id) return 'تخصيص';
+  const c = product?.customizations?.find((x) => x.id === id);
+  return (c?.label ?? '').trim() || 'تخصيص';
 }
 
 export function parsePriceOverride(

@@ -50,6 +50,48 @@
                   }
                 </p>
               }
+              @if (item.customizations?.length) {
+                <div
+                  class="mt-2 space-y-2 rounded-lg border border-primary/10 bg-soft/40 px-3 py-2 text-xs"
+                >
+                  <span class="font-semibold text-primary/80">التخصيص</span>
+                  <ul class="mt-1 space-y-2 text-primary/70">
+                    @for (
+                      c of item.customizations;
+                      track c.product_customization_id
+                    ) {
+                      <li class="leading-snug">
+                        <span class="font-medium text-primary"
+                          >{{
+                            customizationOptionLabelFn(
+                              item.product,
+                              c.product_customization_id
+                            )
+                          }}:</span
+                        >
+                        @if (c.text_value) {
+                          <span class="mr-1">{{ c.text_value }}</span>
+                        }
+                        @if (c.image_url) {
+                          <div class="mt-1 inline-flex flex-col gap-1">
+                            <img
+                              [src]="c.image_url"
+                              [attr.alt]="
+                                customizationOptionLabelFn(
+                                  item.product,
+                                  c.product_customization_id
+                                )
+                              "
+                              class="max-h-18 max-w-full rounded-md border border-white/80 object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                        }
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
               @if (isEditingOptions(item) && itemHasOptions(item)) {
                 <div class="mt-2 flex flex-wrap items-center gap-2">
                   @if (displayColorsFn(item.product).length > 0) {
@@ -78,7 +120,7 @@
                     </div>
                   }
                   @if (
-                    displaySizesFn(item.product, item.selectedColorHex ?? '')
+                    displaySizesFn(item.product, item.selectedColorHex ?? "")
                       .length > 0
                   ) {
                     <label class="text-xs text-primary/70">تغيير المقاس:</label>
@@ -91,7 +133,7 @@
                       @for (
                         size of displaySizesFn(
                           item.product,
-                          item.selectedColorHex ?? ''
+                          item.selectedColorHex ?? ""
                         );
                         track size
                       ) {

@@ -33,9 +33,13 @@
         @if (priceInfo) {
           <div class="flex flex-wrap items-center gap-2">
             @if (priceInfo.discount) {
-              <span class="text-primary/60 line-through">{{ priceInfo.originalPrice }} د.ك</span>
+              <span class="text-primary/60 line-through"
+                >{{ priceInfo.originalPrice }} د.ك</span
+              >
             }
-            <span class="text-2xl font-semibold text-accent">{{ priceInfo.price }} د.ك</span>
+            <span class="text-2xl font-semibold text-accent"
+              >{{ priceInfo.price }} د.ك</span
+            >
             @if (productHasVariants(p)) {
               @let rq = resolvedVariantQuantity(p);
               @if (rq !== null) {
@@ -81,7 +85,9 @@
                 {{ p.in_stock ? "متوفر" : "غير متوفر" }}
               </span>
               @if (p.in_stock && p.is_low_stock) {
-                <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                <span
+                  class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+                >
                   مخزون منخفض ({{ p.stock_quantity }})
                 </span>
               }
@@ -104,7 +110,7 @@
                   'ring-primary/40': selectedColorHex === hex,
                   'ring-offset-1': selectedColorHex === hex,
                   'scale-110': selectedColorHex === hex,
-                  shadow: selectedColorHex === hex
+                  shadow: selectedColorHex === hex,
                 }"
                 (click)="onSelectColor(hex)"
                 title="اختر اللون"
@@ -130,6 +136,114 @@
             }
           </div>
         }
+        @if (sortedCust(p).length > 0) {
+          <div class="flex flex-col gap-3 border-t border-primary/10 pt-4">
+            <span class="text-sm font-medium text-primary/80">التخصيص</span>
+            @for (c of sortedCust(p); track c.id) {
+              <div class="flex flex-col gap-1.5">
+                <label
+                  class="text-sm text-primary/70"
+                  [attr.for]="'cust-' + c.id"
+                >
+                  {{ c.label }}
+                  @if (c.required) {
+                    <span class="text-red-600">*</span>
+                  }
+                </label>
+                @if (c.kind === "TEXT") {
+                  <input
+                    type="text"
+                    [attr.id]="'cust-' + c.id"
+                    class="w-full rounded-xl border border-primary/20 px-3 py-2 text-right outline-none focus:ring-2 focus:ring-accent"
+                    [attr.maxlength]="c.max_chars ?? null"
+                    [ngModel]="custText[c.id]"
+                    (ngModelChange)="onCustTextInput(c, $event)"
+                    [ngModelOptions]="{ standalone: true }"
+                    [placeholder]="
+                      c.text_mode === 'SINGLE_WORD'
+                        ? 'كلمة واحدة (بدون مسافات)'
+                        : 'أدخل النص'
+                    "
+                  />
+                  @if (c.max_chars) {
+                    <span class="text-xs text-primary/50">
+                      الحد الأقصى {{ c.max_chars }} حرفاً
+                    </span>
+                  }
+                } @else {
+                  <input
+                    type="file"
+                    [id]="'cust-upload-' + c.id"
+                    class="absolute h-px w-px opacity-0"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    (change)="onCustImageFileSelect(c, $event)"
+                  />
+                  <div class="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      class="rounded-xl border border-primary/25 bg-soft px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5 disabled:opacity-55"
+                      (click)="pickCustImageFile(c)"
+                      [disabled]="custImageUploadBusy[c.id]"
+                    >
+                      @if (custImageUploadBusy[c.id]) {
+                        جاري الرفع…
+                      } @else {
+                        اختيار صورة
+                      }
+                    </button>
+                    @if (
+                      custImageLocalPreviewUrl[c.id] || uploadedCustImageUrl(c)
+                    ) {
+                      <button
+                        type="button"
+                        class="rounded-xl border border-primary/15 px-3 py-2 text-sm text-primary/75 hover:bg-soft"
+                        (click)="removeCustImage(c)"
+                        [disabled]="custImageUploadBusy[c.id]"
+                      >
+                        إزالة
+                      </button>
+                    }
+                  </div>
+                  @if (custUploadError[c.id]) {
+                    <p class="text-sm text-red-600">
+                      {{ custUploadError[c.id] }}
+                    </p>
+                  }
+                  @if (custImageLocalPreviewUrl[c.id]; as blobSrc) {
+                    <div
+                      class="mt-2 rounded-lg border border-primary/10 bg-soft/80 p-2"
+                    >
+                      <p class="text-xs text-primary/60">
+                        {{
+                          custImageUrl[c.id]
+                            ? "معاينة (بعد الرفع)"
+                            : "معاينة قبل اكتمال الرفع"
+                        }}
+                      </p>
+                      <img
+                        [src]="blobSrc"
+                        [alt]="c.label"
+                        class="mt-2 max-h-44 w-full rounded-md object-contain"
+                      />
+                    </div>
+                  } @else if (showUploadedCustImagePreview(c)) {
+                    <div
+                      class="mt-2 rounded-lg border border-primary/10 bg-soft/80 p-2"
+                    >
+                      <p class="text-xs text-primary/60">معاينة الصورة:</p>
+                      <img
+                        [src]="uploadedCustImageUrl(c)"
+                        [alt]="c.label"
+                        class="mt-2 max-h-44 w-full rounded-md object-contain"
+                      />
+                    </div>
+                  }
+                  <p class="text-xs text-primary/55">حدّ أقصى 5 م.ب.</p>
+                }
+              </div>
+            }
+          </div>
+        }
         <button
           type="button"
           class="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-4 text-lg font-medium text-white transition-transform duration-150 hover:brightness-105 active:scale-95 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-55"
@@ -144,6 +258,24 @@
         }
         @if (outOfStockMessage) {
           <p class="text-sm text-red-600">{{ outOfStockMessage }}</p>
+        }
+        @if (cartAddedSummary().length > 0) {
+          <div
+            class="mt-4 rounded-xl border border-emerald-200/90 bg-emerald-50/95 p-4 text-sm shadow-sm"
+          >
+            @for (line of cartAddedSummary(); track $index) {
+              <p
+                class="leading-relaxed"
+                [ngClass]="{
+                  'mt-2': $index > 0,
+                  'font-semibold text-emerald-900': $index === 0,
+                  'text-primary/85': $index > 0,
+                }"
+              >
+                {{ line }}
+              </p>
+            }
+          </div>
         }
       </div>
     </div>

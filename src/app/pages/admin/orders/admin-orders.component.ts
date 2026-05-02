@@ -203,9 +203,26 @@ export class AdminOrdersComponent implements OnInit {
         const price = getProductPrice(item.product);
         const lineTotal = price * item.quantity;
         const src = imgUrl(item.product.image_url || this.defaultProductImage);
+        const custLines = (item.customization_values ?? [])
+          .map((cv) => {
+            const label = cv.label_snapshot
+              ? `<strong>${esc(cv.label_snapshot)}</strong>: `
+              : '';
+            const k = (cv.kind ?? '').toUpperCase();
+            const img = cv.image_url?.trim();
+            if (k === 'IMAGE' && img) {
+              return `<div class="cust-line">${label}<a href="${attrEsc(img)}">رابط الصورة</a></div>`;
+            }
+            const tx = cv.text_value?.trim();
+            if (tx) {
+              return `<div class="cust-line">${label}${esc(tx)}</div>`;
+            }
+            return '';
+          })
+          .join('');
         return `<tr>
           <td class="col-img"><img src="${attrEsc(src)}" alt="" /></td>
-          <td>${esc(item.product.title)}</td>
+          <td>${esc(item.product.title)}${custLines}</td>
           <td class="col-qty">${item.quantity}</td>
           <td class="col-price">${price.toFixed(2)} د.ك</td>
           <td class="col-total">${lineTotal.toFixed(2)} د.ك</td>
@@ -245,6 +262,7 @@ export class AdminOrdersComponent implements OnInit {
     .items-table .col-img img { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; background: #f8fafc; }
     .items-table .col-qty { text-align: center; }
     .items-table .col-price, .items-table .col-total { text-align: left; }
+    .cust-line { font-size: 0.8125rem; color: #64748b; margin-top: 6px; line-height: 1.35; }
     .totals-box { background: #f8fafc; border-radius: 12px; padding: 20px 24px; margin-top: 24px; }
     .totals-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 0.9375rem; }
     .totals-row.final { font-size: 1.125rem; font-weight: 700; color: var(--primary); margin-top: 8px; padding-top: 12px; border-top: 2px solid var(--border); }

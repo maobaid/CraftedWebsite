@@ -37,11 +37,19 @@ export interface Order {
 
 // ─── Backend API DTOs ─────────────────────────────────────────────────────
 
+/** Matching product customization id; TEXT → text_value only; IMAGE → image_url only. */
+export interface CreateOrderLineCustomizationDto {
+  product_customization_id: string;
+  text_value?: string;
+  image_url?: string;
+}
+
 export interface CreateOrderItemDto {
   product_id: string;
   quantity: number;
   /** When the line uses variant stock / pricing — required for storefront variant products at checkout */
   product_variant_id?: string;
+  customizations?: CreateOrderLineCustomizationDto[];
 }
 
 export interface CreateOrderDto {
@@ -61,6 +69,14 @@ export interface OrderItemResponse {
   product_discount_applied?: string | number;
   product_title?: string;
   product_price?: number;
+  customization_values?: {
+    label_snapshot?: string;
+    kind?: string;
+    text_mode?: string | null;
+    text_value?: string | null;
+    image_url?: string | null;
+    product_customization_id?: string;
+  }[];
 }
 
 /** Order as returned by API (GET /stores/:storeId/orders). */

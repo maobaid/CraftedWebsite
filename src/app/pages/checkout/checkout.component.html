@@ -206,10 +206,44 @@
         <div>
           <h2 class="mb-4 text-lg font-semibold text-primary">مراجعة الطلب</h2>
           <div class="space-y-2 border-b border-primary/10 pb-4">
-            @for (item of cartItems(); track item.product.id) {
-              <div class="flex justify-between text-sm">
-                <span>{{ item.product.title }} × {{ item.quantity }}</span>
-                <span>{{ (getPriceInfo(item).price * item.quantity).toFixed(2) }} د.ك</span>
+            @for (item of cartItems(); track lineKey(item)) {
+              <div class="flex justify-between gap-3 text-sm">
+                <span class="min-w-0 flex-1">
+                  {{ item.product.title }} × {{ item.quantity }}
+                  @if (item.customizations?.length) {
+                    <div class="mt-2 space-y-1 rounded-lg border border-primary/10 bg-soft/50 px-2 py-1.5 text-xs text-primary/75">
+                      <span class="font-semibold text-primary/85">التخصيص</span>
+                      @for (
+                        c of item.customizations;
+                        track c.product_customization_id
+                      ) {
+                        <div class="mt-1 border-t border-primary/10 pt-1 first:mt-0 first:border-t-0 first:pt-0">
+                          <span class="font-medium">{{ customizationOptionLabelFn(item.product, c.product_customization_id) }}:</span>
+                          @if (c.text_value) {
+                            {{ c.text_value }}
+                          }
+                          @if (c.image_url) {
+                            <div class="mt-1 inline-flex flex-col gap-1">
+                              <a
+                                [href]="c.image_url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="text-accent underline"
+                                >عرض الصورة</a
+                              >
+                              <img
+                                [src]="c.image_url"
+                                [attr.alt]="customizationOptionLabelFn(item.product, c.product_customization_id)"
+                                class="max-h-16 max-w-full rounded-md object-cover"
+                              />
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </span>
+                <span class="shrink-0">{{ (getPriceInfo(item).price * item.quantity).toFixed(2) }} د.ك</span>
               </div>
             }
           </div>

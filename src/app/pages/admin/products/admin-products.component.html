@@ -222,6 +222,135 @@
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 class="text-base font-semibold text-primary">
+            إضافة تخصيص المنتج (اختياري)
+          </h3>
+          <p class="mt-1 text-xs text-primary/60">
+            نص أو صورة؛ للنص يُحدّد الطول والنوع كلمة واحدة أو جملة.
+          </p>
+          @if (editingId) {
+            <p class="mt-1 text-xs text-primary/55">
+              عند الحفظ يُحدَّث جدول التخصيص بالكامل.
+            </p>
+          }
+        </div>
+        <button
+          type="button"
+          class="rounded-xl border border-primary/20 px-4 py-2 text-sm hover:bg-soft"
+          (click)="addCustomizationRow()"
+        >
+          + تخصيص
+        </button>
+      </div>
+      @if (customizationRows.length > 0) {
+        <div class="overflow-x-auto rounded-xl border border-primary/15">
+          <table
+            class="w-full min-w-[720px] border-collapse text-right text-sm"
+          >
+            <thead class="bg-primary/5">
+              <tr>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  التسمية
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  النوع
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  إلزامي
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  الترتيب
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  أقصى حد (حروف)
+                </th>
+                <th class="border-b border-primary/10 p-2 font-medium">
+                  نمط النص
+                </th>
+                <th class="border-b border-primary/10 p-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of customizationRows; track $index) {
+                <tr class="border-b border-primary/10 last:border-0">
+                  <td class="p-2 align-middle">
+                    <input
+                      type="text"
+                      [(ngModel)]="row.label"
+                      class="w-full min-w-[140px] rounded-lg border border-primary/15 px-2 py-1.5 outline-none focus:ring-2 focus:ring-accent"
+                      placeholder="مثال: طباعة الاسم"
+                    />
+                  </td>
+                  <td class="p-2 align-middle">
+                    <select
+                      [(ngModel)]="row.kind"
+                      class="w-full rounded-lg border border-primary/15 px-2 py-1.5 outline-none focus:ring-2 focus:ring-accent"
+                    >
+                      <option value="TEXT">نص</option>
+                      <option value="IMAGE">صورة</option>
+                    </select>
+                  </td>
+                  <td class="p-2 align-middle text-center">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="row.required"
+                      class="rounded"
+                    />
+                  </td>
+                  <td class="p-2 align-middle">
+                    <input
+                      type="number"
+                      [(ngModel)]="row.sort_order"
+                      class="w-16 rounded-lg border border-primary/15 px-2 py-1.5 outline-none focus:ring-2 focus:ring-accent"
+                      min="0"
+                      step="1"
+                    />
+                  </td>
+                  <td class="p-2 align-middle">
+                    @if (row.kind === "TEXT") {
+                      <input
+                        type="number"
+                        [(ngModel)]="row.max_chars"
+                        min="1"
+                        class="w-20 rounded-lg border border-primary/15 px-2 py-1.5 outline-none focus:ring-2 focus:ring-accent"
+                      />
+                    } @else {
+                      <span class="text-xs text-primary/45">—</span>
+                    }
+                  </td>
+                  <td class="p-2 align-middle">
+                    @if (row.kind === "TEXT") {
+                      <select
+                        [(ngModel)]="row.text_mode"
+                        class="w-full rounded-lg border border-primary/15 px-2 py-1.5 outline-none focus:ring-2 focus:ring-accent"
+                      >
+                        <option value="SINGLE_WORD">كلمة واحدة</option>
+                        <option value="SENTENCE">جملة</option>
+                      </select>
+                    } @else {
+                      <span class="text-xs text-primary/45">—</span>
+                    }
+                  </td>
+                  <td class="p-2 align-middle">
+                    <button
+                      type="button"
+                      class="rounded-lg px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                      (click)="removeCustomizationRow($index)"
+                    >
+                      حذف
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <div class="mt-8 border-t border-primary/10 pt-6">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-semibold text-primary">
             المتغيرات (مخزون وسعر خاص)
           </h3>
           <p class="mt-1 text-xs text-primary/60">

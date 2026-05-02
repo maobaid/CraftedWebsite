@@ -133,15 +133,29 @@
       </div>
     }
 
-    <button
-      type="button"
-      class="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white transition-all hover:brightness-105 hover:shadow-md active:scale-95 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-55 md:px-4 md:py-3 md:text-base"
-      (click)="addToCart(p)"
-      [disabled]="!canAddLine(p)"
-    >
-      <app-hero-icon name="plus" size="18" />
-      أضف إلى السلة
-    </button>
+    @if (requiresCustomizationOnPdp(p)) {
+      <a
+        [routerLink]="['/product', p.id]"
+        class="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl border border-accent/40 bg-white px-3 py-2 text-sm font-medium text-accent transition-all hover:bg-accent/10 hover:shadow-md md:px-4 md:py-3 md:text-base"
+      >
+        <app-hero-icon name="document-text" size="18" />
+        أكمل التخصيص في صفحة المنتج
+      </a>
+      <p class="text-xs leading-relaxed text-primary/65">
+        يتضمن هذا المنتج حقول تخصيص؛ اختر اللون أو المقاس إن وجدا ثم أدخل النص أو
+        ارفع الصورة كما هو موضّح بالداخل قبل الإضافة.
+      </p>
+    } @else {
+      <button
+        type="button"
+        class="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white transition-all hover:brightness-105 hover:shadow-md active:scale-95 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-55 md:px-4 md:py-3 md:text-base"
+        (click)="addToCart(p)"
+        [disabled]="!canQuickAddToCart(p)"
+      >
+        <app-hero-icon name="plus" size="18" />
+        أضف إلى السلة
+      </button>
+    }
     @if (optionMessage) {
       <p class="text-xs text-red-600">{{ optionMessage }}</p>
     }

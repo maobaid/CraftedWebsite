@@ -9,8 +9,10 @@ import {
 import { CategoryService } from '../../../core/services/category.service';
 import {
   Product,
+  ProductCustomizationInputRow,
   ProductVariantInput,
   normalizeColorKey,
+  sortedProductCustomizations,
 } from '../../../core/models/product.model';
 import { HeroIconComponent } from '../../../shared/icons/hero-icon.component';
 
@@ -53,6 +55,16 @@ export class AdminProductsComponent implements OnInit {
   }[] = [];
   /** When true, next save PATCH sends variants: [] (replace-all empty). */
   explicitClearVariants = false;
+
+  customizationRows: {
+    id?: string;
+    label: string;
+    kind: 'TEXT' | 'IMAGE';
+    required: boolean;
+    sort_order: number;
+    max_chars: number;
+    text_mode: 'SINGLE_WORD' | 'SENTENCE';
+  }[] = [];
 
   constructor(
     public productService: ProductService,
@@ -136,6 +148,7 @@ export class AdminProductsComponent implements OnInit {
   openAdd(): void {
     this.explicitClearVariants = false;
     this.variantRows = [];
+    this.customizationRows = [];
     this.editingId = null;
     this.form = {
       title: '',
@@ -180,7 +193,59 @@ export class AdminProductsComponent implements OnInit {
       low_stock_threshold: p.low_stock_threshold ?? 5,
     };
     this.ensureVariantRowsFromProductOptions();
+    this.customizationRows = sortedProductCustomizations(p).map((c, i) => ({
+      id: c.id,
+      label: c.label,
+      kind: c.kind,
+      required: c.required,
+      sort_order: typeof c.sort_order === 'number' ? c.sort_order : i,
+      max_chars:
+        c.kind === 'TEXT' ? Math.max(1, c.max_chars ?? 80) : 80,
+      text_mode: c.kind === 'TEXT' ? (c.text_mode ?? 'SENTENCE') : 'SENTENCE',
+    }));
     this.showForm = true;
+  }
+
+  addCustomizationRow(): void {
+    const n = this.customizationRows.length;
+    this.customizationRows = [
+      ...this.customizationRows,
+      {
+        label: '',
+        kind: 'TEXT',
+        required: false,
+        sort_order: n,
+        max_chars: 50,
+        text_mode: 'SENTENCE',
+      },
+    ];
+  }
+
+  removeCustomizationRow(index: number): void {
+    this.customizationRows = this.customizationRows.filter((_, i) => i !== index);
+  }
+
+  private rowsToCustomizationPayload(): ProductCustomizationInputRow[] {
+    return this.customizationRows
+      .filter((r) => r.label.trim())
+      .map((r, idx) => {
+        const row: ProductCustomizationInputRow = {
+          label: r.label.trim(),
+          kind: r.kind,
+          required: r.required,
+          sort_order:
+            typeof r.sort_order === 'number' ? r.sort_order : idx,
+        };
+        if (r.id?.trim()) row.id = r.id.trim();
+        if (r.kind === 'TEXT') {
+          row.max_chars = Math.max(
+            1,
+            Math.floor(Number(r.max_chars) || 50),
+          );
+          row.text_mode = r.text_mode;
+        }
+        return row;
+      });
   }
 
   parseTags(input: string): string[] {
@@ -394,13 +459,18 @@ export class AdminProductsComponent implements OnInit {
             low_stock_threshold: lowStockThreshold,
           }),
     };
+    const customizationPayload = this.rowsToCustomizationPayload();
     if (this.editingId) {
       const u: ProductUpdatePayload = { ...(payloadBase as ProductUpdatePayload) };
       if (variantsPart !== undefined) u.variants = variantsPart;
+      u.customizations = customizationPayload;
       this.productService.update(this.editingId, u);
     } else {
       const c: ProductCreatePayload = payloadBase as ProductCreatePayload;
       if (variantsPart !== undefined) c.variants = variantsPart;
+      if (customizationPayload.length > 0) {
+        c.customizations = customizationPayload;
+      }
       this.productService.add(c);
     }
     this.showForm = false;

@@ -13,7 +13,11 @@ import { Customer } from '../models/customer.model';
 import { AuthService } from './auth.service';
 import { StoreCustomerService } from './store-customer.service';
 import { ProductService } from './product.service';
-import { CartItem, Product } from '../models/product.model';
+import {
+  CartItem,
+  OrderCustomizationValueSnapshot,
+  Product,
+} from '../models/product.model';
 import { Address, formatAddressLine } from '../models/address.model';
 import { environment } from '../../../environments/environment';
 import { parseApiErrorMessage } from '../utils/http-error.util';
@@ -302,6 +306,45 @@ function parseNum(v: string | number | undefined | null): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function normalizeOrderCustomizationSnapshots(
+  raw: unknown,
+): OrderCustomizationValueSnapshot[] | undefined {
+  if (!Array.isArray(raw) || raw.length === 0) return undefined;
+  const out: OrderCustomizationValueSnapshot[] = [];
+  for (const x of raw) {
+    if (!x || typeof x !== 'object') continue;
+    const o = x as Record<string, unknown>;
+    out.push({
+      product_customization_id:
+        typeof o['product_customization_id'] === 'string'
+          ? o['product_customization_id']
+          : undefined,
+      label_snapshot:
+        typeof o['label_snapshot'] === 'string' ? o['label_snapshot'] : undefined,
+      kind: typeof o['kind'] === 'string' ? o['kind'] : undefined,
+      text_mode:
+        o['text_mode'] === null || o['text_mode'] === undefined
+          ? o['text_mode'] as null | undefined
+          : typeof o['text_mode'] === 'string'
+            ? o['text_mode']
+            : undefined,
+      text_value:
+        typeof o['text_value'] === 'string'
+          ? o['text_value']
+          : o['text_value'] === null
+            ? null
+            : undefined,
+      image_url:
+        typeof o['image_url'] === 'string'
+          ? o['image_url']
+          : o['image_url'] === null
+            ? null
+            : undefined,
+    });
+  }
+  return out.length ? out : undefined;
+}
+
 function apiOrderToOrder(api: OrderResponse): Order {
   const addrLine =
     typeof api.address === 'string'
@@ -342,6 +385,9 @@ function apiOrderToOrder(api: OrderResponse): Order {
     },
     quantity: it.quantity ?? 1,
     product_variant_id: it.product_variant_id,
+    customization_values: normalizeOrderCustomizationSnapshots(
+      it.customization_values,
+    ),
   }));
 
   const created_at = api.created_at ?? new Date().toISOString();
