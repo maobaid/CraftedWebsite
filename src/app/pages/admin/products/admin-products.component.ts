@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Observable, finalize } from 'rxjs';
 import {
   ProductService,
   ProductCreatePayload,
@@ -15,6 +16,14 @@ import {
   sortedProductCustomizations,
 } from '../../../core/models/product.model';
 import { HeroIconComponent } from '../../../shared/icons/hero-icon.component';
+import { parseApiErrorMessage } from '../../../core/utils/http-error.util';
+
+type ToastType = 'success' | 'error';
+interface ToastMessage {
+  id: number;
+  message: string;
+  type: ToastType;
+}
 
 @Component({
   selector: 'app-admin-products',
@@ -23,6 +32,13 @@ import { HeroIconComponent } from '../../../shared/icons/hero-icon.component';
   templateUrl: './admin-products.component.html',
 })
 export class AdminProductsComponent implements OnInit {
+  /** Success / error banners for save & delete API feedback. */
+  toasts = signal<ToastMessage[]>([]);
+  private toastCounter = 0;
+
+  /** True while POST/PATCH save is in flight. */
+  saveInProgress = false;
+
   showForm = false;
   editingId: string | null = null;
   selectedProductIds = new Set<string>();
@@ -74,6 +90,14 @@ export class AdminProductsComponent implements OnInit {
 
   ngOnInit(): void {
     this.applyStockFilters();
+  }
+
+  private showToast(message: string, type: ToastType): void {
+    const id = ++this.toastCounter;
+    this.toasts.update((list) => [...list, { id, message, type }]);
+    setTimeout(() => {
+      this.toasts.update((list) => list.filter((t) => t.id !== id));
+    }, 4500);
   }
 
   getCategoryName(categoryId: string | null): string {
@@ -464,19 +488,42 @@ export class AdminProductsComponent implements OnInit {
       const u: ProductUpdatePayload = { ...(payloadBase as ProductUpdatePayload) };
       if (variantsPart !== undefined) u.variants = variantsPart;
       u.customizations = customizationPayload;
-      this.productService.update(this.editingId, u);
+      this.runProductSave(
+        this.productService.update(this.editingId, u),
+        'تم تحديث المنتج',
+      );
     } else {
       const c: ProductCreatePayload = payloadBase as ProductCreatePayload;
       if (variantsPart !== undefined) c.variants = variantsPart;
       if (customizationPayload.length > 0) {
         c.customizations = customizationPayload;
       }
-      this.productService.add(c);
+      this.runProductSave(this.productService.add(c), 'تم إضافة المنتج');
     }
-    this.showForm = false;
+  }
+
+  private runProductSave(
+    op: Observable<Product>,
+    successMessage: string,
+  ): void {
+    this.saveInProgress = true;
+    op.pipe(finalize(() => (this.saveInProgress = false))).subscribe({
+      next: () => {
+        this.showToast(successMessage, 'success');
+        this.showForm = false;
+      },
+      error: (err) => {
+        this.showToast(parseApiErrorMessage(err, 'فشل حفظ المنتج'), 'error');
+      },
+    });
   }
 
   delete(id: string): void {
-    if (confirm('هل تريد حذف هذا المنتج؟')) this.productService.delete(id);
+    if (!confirm('هل تريد حذف هذا المنتج؟')) return;
+    this.productService.delete(id).subscribe({
+      next: () => this.showToast('تم حذف المنتج', 'success'),
+      error: (err) =>
+        this.showToast(parseApiErrorMessage(err, 'فشل حذف المنتج'), 'error'),
+    });
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import {
   BestSellerProduct,
   Product,
@@ -206,60 +206,90 @@ export class ProductService {
       });
   }
 
-  add(product: ProductCreatePayload): void {
+  /** Emits normalized product and updates local cache on success only. */
+  add(product: ProductCreatePayload): Observable<Product> {
     const storeId = this.getStoreId();
-    if (!storeId) return;
+    if (!storeId) {
+      return throwError(
+        () =>
+          new Error(
+            'تعذر تحديد المتجر. سجّل الدخول بحساب له متجر أو اضبط معرّف المتجر.',
+          ),
+      );
+    }
     const body = toProductUpdatePayload(product as ProductUpdatePayload);
-    this.http
+    return this.http
       .post<Product>(
         `/stores/${storeId}/products`,
         body,
         this.getAuthHeaders(true),
       )
-      .subscribe({
-        next: (created) => {
-          if (!created) return;
-          const list = [...this.productsSignal(), normalizeProduct(created)];
-          this.productsSignal.set(list);
-        },
-      });
+      .pipe(
+        map((created) => {
+          if (!created) {
+            throw new Error('لم يُعد الخادم أي بيانات للمنتج.');
+          }
+          return normalizeProduct(created);
+        }),
+        tap((normalized) => {
+          this.productsSignal.set([...this.productsSignal(), normalized]);
+        }),
+      );
   }
 
-  update(id: string, updates: ProductUpdatePayload): void {
+  /** Emits normalized product and updates local cache on success only. */
+  update(id: string, updates: ProductUpdatePayload): Observable<Product> {
     const storeId = this.getStoreId();
-    if (!storeId) return;
+    if (!storeId) {
+      return throwError(
+        () =>
+          new Error(
+            'تعذر تحديد المتجر. سجّل الدخول بحساب له متجر أو اضبط معرّف المتجر.',
+          ),
+      );
+    }
     const payload = toProductUpdatePayload(updates);
-    this.http
+    return this.http
       .patch<Product>(
         `/stores/${storeId}/products/${id}`,
         payload,
         this.getAuthHeaders(true),
       )
-      .subscribe({
-        next: (updated) => {
-          if (!updated) return;
-          const list = this.productsSignal().map((p) =>
-            p.id === id ? normalizeProduct(updated) : p,
+      .pipe(
+        map((updated) => {
+          if (!updated) {
+            throw new Error('لم يُعد الخادم أي بيانات للمنتج.');
+          }
+          return normalizeProduct(updated);
+        }),
+        tap((normalized) => {
+          this.productsSignal.set(
+            this.productsSignal().map((p) => (p.id === id ? normalized : p)),
           );
-          this.productsSignal.set(list);
-        },
-      });
+        }),
+      );
   }
 
-  delete(id: string): void {
+  /** Deletes on server and updates local cache only after a successful response. */
+  delete(id: string): Observable<void> {
     const storeId = this.getStoreId();
-    if (!storeId) return;
-    this.http
-      .delete<void>(
-        `/stores/${storeId}/products/${id}`,
-        this.getAuthHeaders(true),
-      )
-      .subscribe({
-        next: () => {
-          const list = this.productsSignal().filter((p) => p.id !== id);
-          this.productsSignal.set(list);
-        },
-      });
+    if (!storeId) {
+      return throwError(
+        () =>
+          new Error(
+            'تعذر تحديد المتجر. سجّل الدخول بحساب له متجر أو اضبط معرّف المتجر.',
+          ),
+      );
+    }
+    return this.http
+      .delete<void>(`/stores/${storeId}/products/${id}`, this.getAuthHeaders(true))
+      .pipe(
+        tap(() => {
+          this.productsSignal.set(
+            this.productsSignal().filter((p) => p.id !== id),
+          );
+        }),
+      );
   }
 }
 

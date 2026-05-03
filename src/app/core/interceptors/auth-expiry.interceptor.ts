@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { tap } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
+import { EMPTY } from 'rxjs';
 
 /**
  * Interceptor that:
@@ -14,6 +15,7 @@ export const authExpiryInterceptor: HttpInterceptorFn = (req, next) => {
   // If token is already expired, log out before sending the request.
   if (auth.isTokenExpired()) {
     auth.logout();
+    return EMPTY;
   }
 
   return next(req).pipe(
@@ -26,4 +28,3 @@ export const authExpiryInterceptor: HttpInterceptorFn = (req, next) => {
     }),
   );
 };
-
