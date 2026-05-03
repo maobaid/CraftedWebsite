@@ -24,6 +24,8 @@ import { HeroIconComponent } from '../icons/hero-icon.component';
 })
 export class ProductCardComponent {
   product = input.required<Product>();
+  /** e.g. best-seller caption: "847 sold" / period copy */
+  salesCaption = input<string | undefined>(undefined);
   private cart = inject(CartService);
   private discountService = inject(ProductDiscountService);
   outOfStockMessage = '';

@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Coupon, CouponType } from '../models/discount.model';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 /** API response for GET /stores/{storeId}/coupons */
 interface CouponsListResponse {
@@ -23,7 +24,7 @@ export class CouponService {
 
   private getStoreId(): string | null {
     const user = this.auth.user();
-    return user?.store_id ?? null;
+    return user?.store_id ?? environment.storeId ?? null;
   }
 
   private getAuthHeaders(): { headers?: HttpHeaders } {

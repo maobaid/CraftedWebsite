@@ -34,6 +34,13 @@
     >
       {{ p.title }}
     </h3>
+    @if (salesCaption(); as sc) {
+      <span
+        class="inline-flex w-fit rounded-full bg-accent/12 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-accent"
+      >
+        {{ sc }}
+      </span>
+    }
     @if (priceInfo.discount) {
       <div class="text-sm text-primary/60 line-through">
         {{ priceInfo.originalPrice }} د.ك

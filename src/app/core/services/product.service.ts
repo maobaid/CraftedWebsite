@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import {
+  BestSellerProduct,
   Product,
   ProductVariant,
   ProductVariantInput,
@@ -27,6 +28,22 @@ export interface ProductListFilters {
   low_stock_threshold?: number;
 }
 
+/** Query params for GET /stores/:storeId/products/best-sellers */
+export interface BestSellersFetchOptions {
+  /** 1–50; omit to use backend default (10). */
+  limit?: number;
+  /** If set, only sales from orders in the last N days (1–3650). Omit for all-time. */
+  days?: number;
+}
+
+/** Matches canonical UUID hex form (same checks as typical store id usage). */
+const STORE_UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isValidStoreUuid(storeId: string | null | undefined): boolean {
+  return typeof storeId === 'string' && STORE_UUID_REGEX.test(storeId.trim());
+}
+
 /** POST body — excludes read-only/top-level computed fields */
 export type ProductCreatePayload = Omit<
   Product,
@@ -46,9 +63,14 @@ export type ProductUpdatePayload = Partial<
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   private productsSignal = signal<Product[]>([]);
+  private bestSellersSignal = signal<BestSellerProduct[]>([]);
+  private bestSellersWindowDaysSignal = signal<number | null>(null);
 
   products = computed(() => this.productsSignal().filter((p) => p.is_active));
   allProducts = this.productsSignal.asReadonly();
+  bestSellers = this.bestSellersSignal.asReadonly();
+  /** Set when the active best-sellers request used `days`; `null` = all‑time listing. */
+  bestSellersWindowDays = this.bestSellersWindowDaysSignal.asReadonly();
 
   constructor(
     private http: HttpClient,
@@ -73,6 +95,50 @@ export class ProductService {
         Authorization: `Bearer ${token}`,
       }),
     };
+  }
+
+  /**
+   * Public storefront bestsellers. Preserves API order by units_sold descending.
+   * Non-2xx clears the list (same pattern as listing errors).
+   */
+  refreshBestSellers(opts?: BestSellersFetchOptions): void {
+    const storeId = this.getStoreId();
+    if (!storeId || !isValidStoreUuid(storeId)) {
+      this.bestSellersSignal.set([]);
+      this.bestSellersWindowDaysSignal.set(null);
+      return;
+    }
+
+    let windowDays: number | null = null;
+    if (opts?.days != null) {
+      windowDays = Math.min(3650, Math.max(1, Math.floor(Number(opts.days))));
+    }
+
+    const params: Record<string, string> = {};
+    if (opts?.limit != null) {
+      const limit = Math.min(50, Math.max(1, Math.floor(Number(opts.limit))));
+      params['limit'] = String(limit);
+    }
+    if (windowDays !== null) {
+      params['days'] = String(windowDays);
+    }
+
+    this.http
+      .get<Product[]>(`/stores/${storeId}/products/best-sellers`, {
+        ...this.getAuthHeaders(),
+        params,
+      })
+      .subscribe({
+        next: (rows) => {
+          const list = Array.isArray(rows) ? rows : [];
+          this.bestSellersSignal.set(list.map(normalizeBestSellerRow));
+          this.bestSellersWindowDaysSignal.set(windowDays);
+        },
+        error: () => {
+          this.bestSellersSignal.set([]);
+          this.bestSellersWindowDaysSignal.set(null);
+        },
+      });
   }
 
   refresh(filters?: ProductListFilters): void {
@@ -224,6 +290,18 @@ function normalizeCustomization(c: Partial<ProductCustomization>): ProductCustom
     max_chars,
     text_mode,
   };
+}
+
+function normalizeBestSellerRow(
+  raw: Product & { units_sold?: unknown },
+): BestSellerProduct {
+  const base = normalizeProduct(raw);
+  const u = raw.units_sold;
+  const units_sold =
+    typeof u === 'number' && Number.isFinite(u)
+      ? Math.max(0, Math.floor(u))
+      : 0;
+  return { ...base, units_sold };
 }
 
 function normalizeProduct(p: Product): Product {

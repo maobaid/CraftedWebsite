@@ -70,6 +70,11 @@ export interface Product {
   customizations?: ProductCustomization[];
 }
 
+/** GET /stores/:storeId/products/best-sellers row (product fields + sales count). */
+export interface BestSellerProduct extends Product {
+  units_sold: number;
+}
+
 export const DEFAULT_PRODUCT_IMAGE =
   '/B1DFDACD-BCB9-489E-85BF-0F4E7A263DF5.JPG';
 

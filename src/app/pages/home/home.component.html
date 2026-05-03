@@ -1,25 +1,266 @@
 <div class="mx-auto max-w-6xl px-5">
-  <section class="py-8 text-center md:py-12">
-    <h1 class="text-2xl font-semibold text-primary md:text-3xl">
-      حياكم الله في متجر كرافتد
+  <!-- Hero -->
+  <header class="border-b border-primary/10 py-10 text-center">
+    <h1 class="text-2xl font-semibold tracking-tight text-primary md:text-3xl">
+      متجر كرافتد
     </h1>
-    <p class="mt-2 text-primary/70">نشاركم لحظاتكم الحلوه</p>
-  </section>
+    <p class="mt-2 text-sm text-primary/65 md:text-base">لحظاتكم الحلوة</p>
+  </header>
 
-  <section class="py-4">
-    <h2 class="mb-6 text-xl font-semibold text-primary">آخر المنتجات</h2>
-    @if (products().length) {
+  <!-- Offers: merged campaigns + coupons (no uploaded images — gradient + SVG) -->
+  @if (homeOffers().length > 0) {
+    <section
+      class="pb-10 pt-5 border-b border-primary/10"
+      aria-labelledby="home-offers-heading"
+    >
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <h2
+          id="home-offers-heading"
+          class="text-lg font-semibold text-primary md:text-xl"
+        >
+          عروض وخصومات
+        </h2>
+      </div>
+      <div
+        [ngClass]="
+          homeOffers().length === 1
+            ? '-mx-1 flex pb-2 sm:mx-0 md:justify-center'
+            : '-mx-1 flex gap-4 overflow-x-auto pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible'
+        "
+      >
+        @for (item of homeOffers(); track offerSeed(item)) {
+          <article
+            class="flex min-h-[158px] snap-start overflow-hidden rounded-2xl border border-primary/12 shadow-md transition-shadow hover:shadow-lg"
+            [ngClass]="
+              homeOffers().length === 1
+                ? 'w-full min-w-0 shrink-0 md:w-1/2'
+                : 'min-w-[min(304px,calc(100vw-4rem))] shrink-0 sm:min-w-0 sm:flex-1 sm:basis-[304px]'
+            "
+            [ngStyle]="offerCardBackground(offerSeed(item))"
+          >
+            <!-- Full-height rail: hero number fills card visually -->
+            @if (item.kind === "discount") {
+              <div
+                class="relative flex h-auto min-h-0 w-[6.25rem] shrink-0 flex-col justify-between bg-gradient-to-b from-white/[0.48] via-white/[0.12] to-white/[0.06] px-2 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.5),inset_-1px_0_0_rgba(37,36,66,0.06)] backdrop-blur-[2px]"
+                aria-hidden="true"
+              >
+                <span class="grow"></span>
+                <div class="flex flex-col items-center gap-0">
+                  <span
+                    class="text-[clamp(2.25rem,6vw,3.125rem)] font-black leading-[0.9] tabular-nums tracking-tighter text-primary [text-shadow:0_2px_18px_rgba(255,255,255,0.65)]"
+                  >
+                    {{ discountSideNumber(item.discount) }}
+                  </span>
+                  <span
+                    class="-mt-0.5 block text-[1.35rem] font-black leading-none text-accent drop-shadow-sm sm:text-[1.625rem]"
+                  >
+                    %
+                  </span>
+                </div>
+                <span class="grow"></span>
+                <span
+                  class="mx-auto mb-1 mt-3 block border-t border-primary/15 pt-2 text-[0.62rem] font-bold uppercase tracking-[0.22em] text-primary/48"
+                >
+                  خصم
+                </span>
+              </div>
+            }
+            @if (item.kind === "coupon") {
+              <div
+                class="relative flex h-auto min-h-0 w-[6.25rem] shrink-0 flex-col justify-between bg-gradient-to-b from-white/[0.48] via-white/[0.12] to-white/[0.06] px-2 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.5),inset_-1px_0_0_rgba(37,36,66,0.06)] backdrop-blur-[2px]"
+                aria-hidden="true"
+              >
+                <span class="grow"></span>
+                <div class="flex flex-col items-center gap-0 px-1">
+                  <span
+                    class="max-w-full text-center text-[clamp(2rem,5vw,3rem)] font-black leading-[0.92] tabular-nums tracking-tighter text-primary [text-shadow:0_2px_18px_rgba(255,255,255,0.65)]"
+                  >
+                    {{ couponSideNumber(item.coupon) }}
+                  </span>
+                  @if (couponSideIsPercentage(item.coupon)) {
+                    <span
+                      class="-mt-0.5 block text-[1.35rem] font-black leading-none text-accent drop-shadow-sm sm:text-[1.625rem]"
+                    >
+                      %
+                    </span>
+                  }
+                  @if (!couponSideIsPercentage(item.coupon)) {
+                    <span
+                      class="mt-0.5 text-sm font-extrabold leading-none tracking-wide text-accent/95"
+                    >
+                      د.ك
+                    </span>
+                  }
+                </div>
+                <span class="grow"></span>
+                <span
+                  class="mx-auto mb-1 mt-3 block border-t border-primary/15 pt-2 text-[0.62rem] font-bold uppercase tracking-[0.22em] text-primary/48"
+                >
+                  كوبون
+                </span>
+              </div>
+            }
+            <div class="flex min-w-0 flex-1 flex-col justify-center p-4 pt-5">
+              @if (item.kind === "discount") {
+                <p
+                  class="text-xs font-semibold uppercase tracking-wide text-primary/55"
+                >
+                  حملة خصم منتجات
+                </p>
+                <p class="mt-1 truncate text-base font-semibold text-primary">
+                  {{ item.discount.name }}
+                </p>
+                <p class="mt-1 text-xs text-primary/70">
+                  {{ discountScopeLabel(item.discount.applies_to) }}
+                </p>
+                <p class="mt-2 text-xs text-primary/65">
+                  حتى {{ formatOfferEnd(item.discount.end_date) }}
+                </p>
+                <a
+                  routerLink="/"
+                  fragment="products"
+                  class="mt-4 inline-flex w-fit text-sm font-semibold text-accent underline-offset-2 hover:underline"
+                >
+                  تصفح المنتجات
+                </a>
+              }
+              @if (item.kind === "coupon") {
+                <p class="text-xs font-semibold text-primary/55">كوبون</p>
+                <code
+                  class="mt-1 block w-fit max-w-full truncate rounded-lg bg-white/75 px-2 py-1.5 text-base font-semibold tracking-wide text-primary shadow-sm ring-1 ring-primary/10"
+                >
+                  {{ item.coupon.code }}
+                </code>
+                <p class="mt-2 text-xs leading-relaxed text-primary/75">
+                  {{ couponBenefitLines(item.coupon) }}
+                </p>
+                <p class="mt-1 text-xs text-primary/60">
+                  ينتهي {{ formatOfferEnd(item.coupon.expires_at) }}
+                </p>
+                <button
+                  type="button"
+                  class="mt-4 w-fit text-sm font-semibold text-accent underline-offset-2 hover:underline"
+                  (click)="copyCouponCode(item.coupon.code)"
+                >
+                  نسخ الكود
+                </button>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Best sellers (API order preserved) -->
+  @if (bestSellersForHome().length > 0) {
+    <section
+      class="border-b border-primary/10 pb-10 pt-6"
+      aria-labelledby="home-bestsellers-heading"
+    >
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <h2
+          id="home-bestsellers-heading"
+          class="text-lg font-semibold text-primary md:text-xl"
+        >
+          الأكثر مبيعاً
+        </h2>
+        <a
+          routerLink="/"
+          fragment="products"
+          class="text-sm font-medium text-accent hover:underline"
+        >
+          كل المنتجات
+        </a>
+      </div>
+      <div
+        class="-mx-1 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-2 pt-1 sm:mx-0 sm:snap-none md:overflow-visible md:pb-0"
+      >
+        @for (p of bestSellersForHome(); track p.id) {
+          <div
+            class="min-w-[min(288px,calc(100vw-5rem))] shrink-0 snap-center sm:snap-none sm:min-w-[300px] md:min-w-0 md:max-w-sm md:flex-1 md:basis-[280px]"
+          >
+            <app-product-card [product]="p" [salesCaption]="bestSellerCaption(p)" />
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Categories -->
+  @if (storefrontCategories().length > 0) {
+    <section class="pt-5" aria-labelledby="home-categories-heading">
+      <h2
+        id="home-categories-heading"
+        class="mb-4 text-lg font-semibold text-primary md:text-xl"
+      >
+        التصنيفات
+      </h2>
+      <div class="flex flex-wrap gap-2">
+        @for (cat of storefrontCategories(); track cat.id!) {
+          <a
+            [routerLink]="['/']"
+            [queryParams]="{ category: cat.slug }"
+            queryParamsHandling=""
+            class="rounded-full border border-primary/15 bg-white/60 px-4 py-2 text-sm font-medium text-primary shadow-sm backdrop-blur-sm transition-colors hover:border-accent/40 hover:bg-white"
+            [ngClass]="
+              selectedCategorySlug() === cat.slug ? 'ring-2 ring-accent/50' : ''
+            "
+          >
+            {{ cat.name }}
+          </a>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Products -->
+  <section id="products" class="scroll-mt-24 py-8">
+    <div
+      class="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-primary/10 pb-4"
+    >
+      <h2 class="text-lg font-semibold text-primary md:text-xl">المنتجات</h2>
+      @if (hasCategoryFilter()) {
+        <a
+          routerLink="/"
+          queryParamsHandling=""
+          class="rounded-full bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10"
+        >
+          إظهار الكل
+        </a>
+      }
+    </div>
+
+    @if (filteredProductGrid().length === 0) {
+      @if (hasCategoryFilter()) {
+        <p class="py-12 text-center text-primary/70">
+          لا توجد منتجات ضمن هذا التصنيف.
+          <a routerLink="/" class="mr-2 text-accent hover:underline"
+            >عرض كل المنتجات</a
+          >
+        </p>
+      } @else {
+        <p class="py-12 text-center text-primary/70">
+          لا توجد منتجات متاحة حالياً.
+        </p>
+      }
+    } @else {
       <div
         class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
-        @for (product of products(); track product.id) {
+        @for (product of filteredProductGrid(); track product.id) {
           <app-product-card [product]="product" />
         }
       </div>
-    } @else {
-      <p class="py-12 text-center text-primary/70">
-        لا توجد منتجات متاحة حالياً.
-      </p>
+      @if (
+        productService.products().length > productSliceLimit &&
+        !hasCategoryFilter()
+      ) {
+        <p class="mt-8 text-center text-xs text-primary/55">
+          يُعرض أول {{ productSliceLimit }} من المنتجات حسب قائمة المتجر
+          الحالية.
+        </p>
+      }
     }
   </section>
 </div>

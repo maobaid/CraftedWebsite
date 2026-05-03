@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Category } from '../models/category.model';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 interface CategoriesListResponse {
   data?: Category[];
@@ -22,7 +23,7 @@ export class CategoryService {
 
   private getStoreId(): string | null {
     const user = this.auth.user();
-    return user?.store_id ?? null;
+    return user?.store_id ?? environment.storeId ?? null;
   }
 
   private getAuthHeaders(): { headers?: HttpHeaders } {
