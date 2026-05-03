@@ -11,8 +11,6 @@ import {
   isVariantSelectable,
   productHasVariants,
   sortedProductCustomizations,
-  variantColorSelectable,
-  variantSizeSelectable,
 } from '../../core/models/product.model';
 import { CartService } from '../../core/services/cart.service';
 import { ProductDiscountService } from '../../core/services/product-discount.service';
@@ -59,16 +57,6 @@ export class ProductCardComponent {
     if (this.selectedSize && !sizes.includes(this.selectedSize)) {
       this.selectedSize = '';
     }
-  }
-
-  colorDisabled(p: Product, hex: string): boolean {
-    if (!productHasVariants(p)) return false;
-    return !variantColorSelectable(p, hex, this.selectedSize);
-  }
-
-  sizeDisabled(p: Product, size: string): boolean {
-    if (!productHasVariants(p)) return false;
-    return !variantSizeSelectable(p, size, this.selectedColorHex);
   }
 
   requiresCustomizationOnPdp(p: Product): boolean {

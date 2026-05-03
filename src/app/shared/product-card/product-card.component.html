@@ -93,11 +93,10 @@
         @for (hex of displayColorsFn(p); track hex) {
           <button
             type="button"
-            class="h-5 w-5 rounded-full border-2 transition-all disabled:cursor-not-allowed disabled:opacity-35"
+            class="h-5 w-5 rounded-full border-2 transition-all"
             [style.background]="hex"
             [class.border-primary]="selectedColorHex === hex"
             [class.border-gray-300]="selectedColorHex !== hex"
-            [disabled]="colorDisabled(p, hex)"
             [ngClass]="{
               'ring-2': selectedColorHex === hex,
               'ring-accent/60': selectedColorHex === hex,
@@ -117,14 +116,13 @@
         @for (size of displaySizesFn(p, selectedColorHex); track size) {
           <button
             type="button"
-            class="rounded-md border px-2 py-0.5 text-xs border-primary/40 disabled:cursor-not-allowed disabled:opacity-35"
+            class="rounded-md border px-2 py-0.5 text-xs border-primary/40"
             [ngClass]="{
               'bg-accent/60': selectedSize === size,
               'border-accent/60': selectedSize === size,
               'border-primary': selectedSize === size,
             }"
             [class.border-gray-300]="selectedSize !== size"
-            [disabled]="sizeDisabled(p, size)"
             (click)="selectedSize = size; optionMessage = ''"
           >
             {{ size }}
@@ -136,14 +134,14 @@
     @if (requiresCustomizationOnPdp(p)) {
       <a
         [routerLink]="['/product', p.id]"
-        class="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl border border-accent/40 bg-white px-3 py-2 text-sm font-medium text-accent transition-all hover:bg-accent/10 hover:shadow-md md:px-4 md:py-3 md:text-base"
+        class="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl border border-accent/40 bg-white px-3 py-2 text-sm font-medium text-accent transition-all hover:bg-accent/10 hover:text-accent/90 hover:shadow-md md:px-4 md:py-3 md:text-base"
       >
         <app-hero-icon name="document-text" size="18" />
-        أكمل التخصيص في صفحة المنتج
+        اختيارات التخصيص
       </a>
       <p class="text-xs leading-relaxed text-primary/65">
-        يتضمن هذا المنتج حقول تخصيص؛ اختر اللون أو المقاس إن وجدا ثم أدخل النص أو
-        ارفع الصورة كما هو موضّح بالداخل قبل الإضافة.
+        يتضمن هذا المنتج تخصيصات أكمل اختيار التخصيص في صفحة المنتج قبل الإضافة
+        للسلة.
       </p>
     } @else {
       <button
